@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#インストール)
-[![Size](https://img.shields.io/badge/APK-48%20KB-78716a.svg)](#インストール)
+[![Size](https://img.shields.io/badge/APK-61%20KB-78716a.svg)](#インストール)
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#プライバシー)
 
 [简体中文](README.md) · [繁體中文](README.zh-TW.md) · [English](README.en.md) · **日本語**
@@ -133,7 +133,7 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-`aapt2 compile → link → javac → d8 → zipalign → apksigner` を順に実行し、48 KB の APK を作って接続中の端末にインストールします。
+`aapt2 compile → link → javac → d8 → zipalign → apksigner` を順に実行し、61 KB の APK を作って接続中の端末にインストールします。
 
 > 初回ビルドで `android/keystore.jks` が生成されます。署名鍵なので `.gitignore` で除外済みです。**コミットしないでください。**
 
