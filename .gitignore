@@ -29,3 +29,6 @@ _*.png
 
 # 临时授权日志
 auth.log
+
+# 本地授权脚本
+auth-github.cmd
