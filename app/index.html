@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#fdfcfa">
+<title>环境检测</title>
+<style>
+:root{
+  --bg:#fdfcfa; --card:#fff; --line:#eeeae4; --line2:#f5f2ed;
+  --ink:#1c1a18; --ink2:#78716a; --ink3:#b0a89f;
+  --accent:#d97757; --ok:#3a9e6b; --wa:#d99a2b; --bd:#d9534a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans","Microsoft YaHei",sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+#app{position:relative;height:100%;max-width:520px;margin:0 auto;overflow:hidden}
+
+.view{position:absolute;inset:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(env(safe-area-inset-top) + 8px) 22px calc(env(safe-area-inset-bottom) + 24px);
+  opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .3s ease,transform .3s ease}
+.view.on{opacity:1;pointer-events:auto;transform:none}
+
+#v-home{justify-content:center;align-items:center;text-align:center}
+.brand{font-size:13px;letter-spacing:.18em;color:var(--ink3);margin-bottom:26px}
+.home-title{font-size:29px;font-weight:700;letter-spacing:-.4px}
+.home-sub{font-size:14px;color:var(--ink2);margin-top:12px;line-height:1.7}
+.home-meta{font-size:12.5px;color:var(--ink3);margin-top:6px}
+.gear{position:absolute;top:34px;right:4px;width:40px;height:40px;z-index:5;
+  border:none;background:transparent;color:var(--ink3);font-size:17px}
+.ksheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card);
+  border-radius:22px 22px 0 0;padding:8px 22px calc(env(safe-area-inset-bottom) + 26px);
+  transform:translateY(102%);transition:transform .34s cubic-bezier(.2,.9,.25,1);
+  max-width:520px;margin:0 auto}
+.ksheet.on{transform:none}
+.ksheet h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.ksheet p{font-size:12.5px;color:var(--ink2);line-height:1.7;margin-bottom:12px}
+.ksheet input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+  font-size:14px;background:#faf8f5;color:var(--ink);outline:none}
+.ksheet .row{display:flex;gap:10px;margin-top:14px}
+.ksheet button{flex:1;padding:13px;border-radius:12px;border:none;font-size:14.5px;font-weight:600}
+.ksheet .ok{background:var(--accent);color:#fff}
+.ksheet .no{background:#f7f4f0;color:var(--ink2)}
+.lang-row{margin-top:16px;padding-top:14px;border-top:1px solid var(--line2)}
+.lang-label{font-size:11.5px;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:9px}
+.lang-opts{display:flex;flex-wrap:wrap;gap:8px}
+.lang-opts button{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;
+  color:var(--ink2);font-size:13px}
+.lang-opts button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.start{margin-top:44px;width:100%;max-width:280px;padding:17px;border:none;border-radius:99px;
+  background:var(--accent);color:#fff;font-size:16px;font-weight:600;letter-spacing:.5px;
+  box-shadow:0 10px 26px rgba(217,119,87,.28);transition:transform .15s}
+.start:active{transform:scale(.97)}
+.home-foot{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 18px);left:0;right:0;text-align:center;
+  font-size:11px;color:var(--ink3);line-height:1.7}
+
+#v-scan{padding-top:calc(env(safe-area-inset-top) + 18px)}
+.scan-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.scan-top h2{font-size:20px;font-weight:700}
+.scan-top b{font-size:13px;color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums}
+.bar{height:3px;background:var(--line2);border-radius:99px;overflow:hidden;margin-bottom:20px}
+.bar>i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s}
+.rows{flex:1}
+
+.row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line2)}
+.row:last-child{border-bottom:none}
+.row .st{width:20px;height:20px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.ring-s{width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tick{font-size:14px;line-height:1}
+.row .nm{flex:1;font-size:14.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .vl{font-size:13px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.row .vl b{font-size:14px;font-weight:600}
+.row.new{animation:rowIn .34s cubic-bezier(.25,.9,.3,1)}
+@keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.c-ok{color:var(--ok)} .c-wa{color:var(--wa)} .c-bd{color:var(--bd)}
+
+#v-result{padding-top:calc(env(safe-area-inset-top) + 8px)}
+#v-result .vwrap{margin:auto 0;width:100%;display:flex;flex-direction:column;align-items:center;text-align:center}
+.dial{position:relative;width:196px;height:196px;flex:0 0 auto}
+.dial svg{transform:rotate(-90deg)}
+.dial .bgc{fill:none;stroke:var(--line2);stroke-width:8}
+.dial .fgc{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;
+  transition:stroke-dashoffset 1s cubic-bezier(.22,.9,.25,1),stroke .5s}
+.dial .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dial .big{font-size:44px;font-weight:700;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.dial .big i{font-style:normal;font-size:15px;font-weight:500;color:var(--ink3)}
+.dial .lab{font-size:11.5px;color:var(--ink3);margin-top:7px;letter-spacing:.08em}
+.verdict{margin-top:26px;font-size:21px;font-weight:700}
+.verdict-sub{font-size:13px;color:var(--ink2);margin-top:9px;line-height:1.75;max-width:310px}
+.veto{margin-top:18px;width:100%;background:#fdeeec;border:1px solid #f6d2cd;border-radius:14px;
+  padding:12px 14px;text-align:left}
+.veto .vt{font-size:11.5px;color:#96332c;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.veto div.vl{font-size:12.5px;color:#7d2a24;line-height:1.65;padding:3px 0;display:flex;gap:6px}
+.veto div.vl::before{content:"✕";font-weight:700}
+.scorecard{margin-top:26px;width:100%}
+.sct{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--card);
+  border:1px solid var(--line);border-radius:16px;transition:transform .15s}
+.sct:active{transform:scale(.99)}
+.sct .l{font-size:14.5px;font-weight:600}
+.sct .r{font-size:13px;color:var(--ink3)}
+.again{margin-top:14px;width:100%;padding:14px;border:1px solid var(--line);border-radius:14px;
+  background:transparent;color:var(--ink2);font-size:14px}
+
+#v-detail{padding-top:calc(env(safe-area-inset-top) + 12px)}
+.nav{display:flex;align-items:center;gap:10px;padding:6px 0 18px}
+.nav button{border:none;background:none;font-size:15px;color:var(--ink2);padding:4px 8px 4px 0}
+.nav h2{font-size:18px;font-weight:700}
+.grp{margin-bottom:22px}
+.grp-t{display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px;font-size:12px;color:var(--ink3)}
+.grp-t b{font-weight:600;color:var(--ink2)}
+.itm{display:flex;align-items:center;gap:12px;padding:15px 16px;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;margin-bottom:8px;transition:transform .14s}
+.itm:active{transform:scale(.985)}
+.itm .nm{flex:1;font-size:14.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.itm .sc{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.itm .ar{color:var(--ink3);font-size:15px}
+.badge{font-size:10px;padding:1px 6px;border-radius:6px;background:#fdeeec;color:#96332c;margin-left:6px;font-weight:600}
+
+#mask{position:fixed;inset:0;background:rgba(28,26,24,.32);opacity:0;pointer-events:none;transition:opacity .28s;z-index:40}
+#mask.on{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);
+  border-radius:22px 22px 0 0;padding:8px 22px calc(env(safe-area-inset-bottom) + 26px);
+  transform:translateY(102%);transition:transform .34s cubic-bezier(.2,.9,.25,1);
+  max-width:520px;margin:0 auto;max-height:82vh;overflow-y:auto}
+#sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:99px;background:var(--line);margin:6px auto 18px}
+.sh-head h3{font-size:19px;font-weight:700}
+.sh-score{margin-top:6px;font-size:13px;color:var(--ink2)}
+.sh-row{margin-top:18px;padding-top:16px;border-top:1px solid var(--line2)}
+.sh-k{font-size:11.5px;letter-spacing:.1em;color:var(--ink3);margin-bottom:7px}
+.sh-v{font-size:14px;color:var(--ink);line-height:1.75}
+.sh-v.fix{color:#7a5236}
+.sh-close{margin-top:22px;width:100%;padding:14px;border-radius:13px;border:none;background:#f7f4f0;
+  color:var(--ink2);font-size:14.5px}
+.foot-note{font-size:11px;color:var(--ink3);text-align:center;line-height:1.7;padding:14px 0 4px}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section class="view on" id="v-home">
+    <div class="brand">CLAUDE</div>
+    <div class="home-title" id="tTitle">环境检测</div>
+    <div class="home-sub" id="tHomeSub">检查这台手机是否适合使用 Claude</div>
+    <div class="home-meta" id="homeMeta">共 19 项信号 · 逐项打分</div>
+    <button class="start" id="btnStart">开始检测</button>
+    <button class="gear" id="btnKey" aria-label="设置">⚙</button>
+    <div class="home-foot" id="tPrivacy">仅本机计算，不上传任何数据</div>
+  </section>
+
+  <section class="view" id="v-scan">
+    <div class="scan-top"><h2 id="tScanning">正在检测</h2><b id="scanCount">0 / 19</b></div>
+    <div class="bar"><i id="scanBar"></i></div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <section class="view" id="v-result">
+   <div class="vwrap">
+    <div class="dial">
+      <svg width="196" height="196" viewBox="0 0 196 196">
+        <circle class="bgc" cx="98" cy="98" r="88"/>
+        <circle class="fgc" id="fg" cx="98" cy="98" r="88" stroke-dasharray="552.9" stroke-dashoffset="552.9"/>
+      </svg>
+      <div class="mid">
+        <div class="big" id="totalNum">0<i>/190</i></div>
+        <div class="lab" id="tScore">综合得分</div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict">--</div>
+    <div class="verdict-sub" id="verdictSub"></div>
+    <div id="vetoBox"></div>
+    <div class="scorecard">
+      <div class="sct" id="openDetail">
+        <span class="l" id="tDetail">查看各项明细</span>
+        <span class="r"><span id="lowCount">0 项待改进</span> ›</span>
+      </div>
+    </div>
+    <button class="again" id="btnAgain">重新检测</button>
+    <div class="foot-note" id="tDisclaimer">检测结果仅供参考，不代表 Anthropic 官方判断</div>
+   </div>
+  </section>
+
+  <section class="view" id="v-detail">
+    <div class="nav"><button id="back">‹</button><h2 id="tDetailTitle">检测明细</h2></div>
+    <div id="groups"></div>
+    <div class="foot-note" id="tPick">点击任一项查看原因与处理办法</div>
+  </section>
+
+</div>
+
+<div id="ksheet" class="ksheet">
+  <div class="grab"></div>
+  <h3 id="kKeyTitle">IP 情报接口设置</h3>
+  <p id="kKeyDesc">线路类型判定会向 proxycheck.io 查询一次。</p>
+  <input id="keyInput" placeholder="proxycheck API key" autocomplete="off" spellcheck="false">
+  <div class="lang-row">
+    <span class="lang-label" id="kLangTitle">语言</span>
+    <div class="lang-opts" id="langOpts"></div>
+  </div>
+  <div class="row"><button class="no" id="keyCancel">取消</button><button class="ok" id="keySave">保存</button></div>
+</div>
+<div id="mask"></div>
+<div id="sheet">
+  <div class="grab"></div>
+  <div class="sh-head"><div><h3 id="shTitle">--</h3><div class="sh-score" id="shScore"></div></div></div>
+  <div class="sh-row"><div class="sh-k" id="kGot">测到什么</div><div class="sh-v" id="shValue"></div></div>
+  <div class="sh-row"><div class="sh-k" id="kWhy">为什么在意</div><div class="sh-v" id="shWhy"></div></div>
+  <div class="sh-row"><div class="sh-k" id="kFix">怎么改</div><div class="sh-v fix" id="shFix"></div></div>
+  <button class="sh-close" id="shClose">知道了</button>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const CIRC=552.9; // 2πr, r=88
+
+/* ===================== 原生读取 ===================== */
+let NATIVE=null, INTEG=null, SIM=null, APPS=null, SYSFONTS=[];
+try{
+  if(window.Native){
+    NATIVE=JSON.parse(window.Native.device()||'{}');
+    INTEG=JSON.parse(window.Native.integrity()||'{}');
+    SIM=JSON.parse(window.Native.sim()||'{}');
+    APPS=JSON.parse(window.Native.apps()||'{}');
+    SYSFONTS=JSON.parse(window.Native.fonts()||'[]');
+  }
+}catch(e){}
+/* MCC 国家码 → 国家代码（运营商侧硬数据） */
+const MCC_CC={ '460':'CN','454':'HK','455':'MO','466':'TW','310':'US','311':'US','312':'US','313':'US',
+'314':'US','315':'US','316':'US','234':'GB','235':'GB','525':'SG','440':'JP','441':'JP','250':'RU',
+'404':'IN','405':'IN','406':'IN','302':'CA','505':'AU','262':'DE','208':'FR','724':'BR','450':'KR',
+'510':'ID','520':'TH','452':'VN','502':'MY' };
+function mccCountry(s){
+  if(!s) return '';
+  const mcc=String(s.mcc||'').trim();
+  return (String(s.country||'').toUpperCase())||MCC_CC[mcc]||'';
+}
+const SYSFONT_STR=(SYSFONTS||[]).join(' ').toLowerCase();
+const sysHas=n=>SYSFONT_STR.indexOf(String(n).toLowerCase())>=0;
+console.log('[NATIVE] device='+JSON.stringify(NATIVE));
+console.log('[NATIVE] integrity='+JSON.stringify(INTEG));
+console.log('[NATIVE] fonts='+SYSFONTS.length);
+
+/* ===================== 官方地区名单 ===================== */
+const UNSUP=new Set(['CN','HK','MO','RU','BY','IR','KP','CU','SY']);
+
+/* ===================== IP 情报 ===================== */
+
+/* ===================== 国际化 ===================== */
+const LANGS = ['zh-CN','zh-TW','en','ja'];
+const LANG_NAME = {'zh-CN':'简体中文','zh-TW':'繁體中文','en':'English','ja':'日本語'};
+
+/* 当前语言：URL 参数 ?lang=xx 优先，其次系统语言 */
+function detectLang(){
+  try{
+    const q=new URLSearchParams(location.search).get('lang');
+    if(q&&LANGS.includes(q)) return q;
+    const saved=localStorage.getItem('lang');
+    if(saved&&LANGS.includes(saved)) return saved;
+    const nav=(navigator.languages&&navigator.languages[0])||navigator.language||'';
+    if(/^zh-tW|^zh-hk|^zh-hant/i.test(nav)) return 'zh-TW';
+    if(/^zh/i.test(nav)) return 'zh-CN';
+    if(/^ja/i.test(nav)) return 'ja';
+    return 'en';
+  }catch(e){ return 'zh-CN'; }
+}
+let LANG = detectLang();
+
+const I18N = {
+'zh-CN':{
+  appName:'环境检测',
+  homeSub:'检查这台手机是否适合使用 Claude',
+  homeMeta:(n,m)=>`共 ${n} 项信号 · 按权重计分（总分 ${m}）`,
+  start:'开始检测',
+  privacy:'仅本机计算，不上传任何数据',
+  scanning:'正在检测',
+  score:'综合得分',
+  detail:'查看各项明细',
+  detailTitle:'检测明细',
+  again:'重新检测',
+  disclaimer:'检测结果仅供参考，不代表 Anthropic 官方判断',
+  pick:'点击任一项查看原因与处理办法',
+  verdictTitle:'检测结论',
+  vetoTitle:'硬性不过关',
+  grp:{fingerprint:'指纹一致性',device:'设备完整性',network:'网络出口'},
+  badgeVeto:'否决',
+  k:{got:'测到什么',why:'为什么在意',fix:'怎么改'},
+  ok:'知道了',
+  keyTitle:'IP 情报接口设置',
+  keyDesc:'线路类型判定会向 proxycheck.io 查询一次。不带 key 时每个出口 IP 每天 100 次（按你的网络出口 IP 计算，不与其他用户共享）；填入免费 key 后为 1000 次/天。留空则自动降级为只有 ip-api + 本地规则判定。',
+  keyPlaceholder:'粘贴 proxycheck API key（可留空）',
+  cancel:'取消', save:'保存',
+  langTitle:'语言',
+  pending:(n)=>`${n} 项待改进`, allPass:'全部达标',
+  scScoreLbl:'得分', scWeightLbl:'权重',
+  v:{ok:'可以放心使用',warn:'有一定风险',bad:'不建议使用',stop:'请不要使用'},
+  d:{
+    veto:(n)=>`有 ${n} 项是硬性不过关。不是扣几分的事：只要踩中一条，注册和使用都会被判成不支持地区，充了钱也白搭。`,
+    ok:'各项都对得上，没发现明显矛盾。保持现在这个网络和设备状态，别来回切节点。',
+    warn:'有几处看得出问题。单独一项一般不致命，但这些信号是累加的，攒多了信任分就下来了。按明细改完再测一次。',
+    bad:'问题比较多，整体不太像一个普通用户的正常环境。先照着明细改，再考虑登录。'
+  },
+  items:{
+    '系统时区':{n:'系统时区',why:'时区会暴露你在哪个时区。网络可以绕到美国，手机时间还停在北京，两边一对就露馅了。它单独出现不算大事，但和其他线索叠在一起，就成了人在国内的旁证。',fix:'设置 → 系统 → 日期和时间，关掉自动，手动选到跟出口一致的城市。改完重开本软件。'},
+    '时区偏移':{n:'时区偏移',why:'除了时区名字，系统还会单独报一个 UTC 偏移。有人改了名字、偏移没跟上，这种半改的状态比不改更容易被注意到。',fix:'改完时区重开本软件，看这里有没有跟着变。没变就是设置没生效。'},
+    '系统语言':{n:'系统语言',why:'语言列表排第一的那个，等于告诉别人你平时用什么语言。所有应用都能读到，是画像里比较显眼的一条。',fix:'设置 → 系统 → 语言，把 English 调到第一位。中文留在后面不影响用。'},
+    '中文语言变体':{n:'中文语言变体',why:'列表里只要还留着简体或繁体，就会被单独记一笔。英文排第一、中文还在，等于自己承认两边都用。',fix:'只留英文，中文删掉。'},
+    '系统区域设置':{n:'系统区域设置',why:'界面语言和区域格式是两个开关。有人把界面改成英文，区域还是中国，日期、数字都按国内习惯显示。这种表面英文反而比纯中文更扎眼。',fix:'设置 → 系统 → 语言和区域，区域也要改成对应国家，别只改语言。'},
+    '中文字体栈':{n:'中文字体栈',why:'字体是装在系统里的文件，改语言改不动它。所以这一项看的是手机本身有没有中文字体，属于改不掉的证据。',fix:'本机改不了。要换只能换设备。'},
+    '厂商预装字体':{n:'厂商预装字体',why:'小米、华为、OPPO 会自带自家字体，只在国产行货上出现。看到这些字体，基本就知道手机是从哪来的。',fix:'部分机型能卸载，不能卸的只能靠隔离方案。'},
+    'SIM 与号码':{n:'SIM 与号码',why:'手机能读到 SIM 卡上的国家码，插的哪国卡一目了然，双卡的话两张都读得到。Claude 注册要的实体号码，和这个信息是对得上的。',fix:'尽量用支持地区的实体卡。号码有没有被别人用过，只有运营商知道，本机查不到。'},
+    '设备型号':{n:'设备型号',why:'型号来自系统属性，直接报出品牌和机型。单独看意义不大，主要是配合字体、语言一起判断。',fix:'换不了，也不用换。这项最多影响 1 分。'},
+    'Root / 框架':{n:'Root / 框架',why:'Root 过的机器，设备信息可以随便改，风险系统对这类环境默认不信任。同一台机器上的几个账号也容易被串起来。',fix:'没特别需要就别 Root。'},
+    '模拟器检测':{n:'模拟器检测',why:'云手机和模拟器是批量注册最常用的工具，特征都写在系统属性里，一查就出来。沾上基本没救。',fix:'用真机，别在云手机或模拟器上登录。'},
+    '系统 ROM 状态':{n:'系统 ROM 状态',why:'看系统是不是官方原版。刷过第三方 ROM 的机器跟普通用户不太一样，会和其他异常一起算。',fix:'用官方固件就行。'},
+    '支付环境':{n:'支付环境',why:'卡号和账单地址在服务器那边，手机上看不到。但能看出你用的是哪套体系：应用从哪个商店装的、有没有 Google 服务、装了什么支付工具。这几样凑起来，大致能判断你的支付在国内还是国外。',fix:'尽量走 Google Play 装应用，付款用跟出口地区一致的卡。'},
+    '多开与分身':{n:'多开与分身',why:'一台手机开几个分身，等于同一台设备上挂多个账号。设备信息是共用的，一个出事其他都跑不掉。',fix:'一个设备只留一个账号环境，分身软件卸掉。'},
+    '代理隧道状态':{n:'代理隧道状态',why:'只是看现在有没有开全局代理。没开的话，下面的 IP 就是你家的真实地址。',fix:'用代理就开全局模式，别只代理单个应用。'},
+    'IP 归属地':{n:'IP 归属地',why:'官方写得很清楚，只有人在支持地区才能注册和使用。名单里没有中国大陆、港澳、俄罗斯这些地方。这一项不过，别的都白搭。',fix:'换一个支持地区的固定出口，家宽比机房稳妥。别用共享节点，同一个 IP 上可能挂着一堆已经被封的号。'},
+    'IP 类型与纯净度':{n:'IP 类型与纯净度',why:'机房 IP 和家用宽带待遇完全不同。机房 IP 常被拿去批量注册，整段都容易被拉黑。更麻烦的是，很多卖“家宽”的其实是机房换了名字。所以这里同时问三个地方：有没有被标成机房、ASN 归谁、反向解析指向哪。三条里两条对得上，就按机房算。',fix:'用真家宽或移动网络。只能用机房 IP 的话，至少找独立 IP，别跟人共用。'},
+    'IPv6 泄露':{n:'IPv6 泄露',why:'大部分代理只管 IPv4。访问支持 IPv6 的网站时，请求会从本地 IPv6 直接溜出去，把真实运营商暴露了。很多人“明明挂着代理还是被封”，问题就在这。',fix:'手机网络设置里把 IPv6 关掉，或者用能接管 v6 的全局模式。'},
+    '实时通信穿透':{n:'实时通信穿透',why:'实时通话功能为了连线，会去探本机的网络地址，普通代理拦不住。探到的地址和出口不在一个地方，等于直接告诉对方你真实在哪。',fix:'用全局代理，或者在系统里限制实时通信权限。'},
+    '时区与 IP 一致性':{n:'时区与 IP 一致性',why:'这两项分开看都没事，放一起就出问题。时区在北京、IP 在东京，一对不上，比单独任何一项都明显。',fix:'让时区跟着出口走，最省事也最有效。'},
+    'Claude 服务连通':{n:'Claude 服务连通',why:'连不上说明代理规则漏了 anthropic 的域名。常见的情况是浏览器能用、命令行报 403，因为两边走的不是一个出口。',fix:'检查分流规则，把 anthropic.com、claude.ai、claudeusercontent.com 都放进去。'}
+  },
+  /* 结果值文案 */
+  r:{
+    tzCN:(tz)=>`系统时区为中国时区（${tz}），与官方支持地区直接冲突`,
+    tzNote:(tz,ip,m)=>`${tz}（IP 时区 ${ip}${m?'，不一致':'，一致'}）`,
+    tzUnknown:'未识别',
+    simLimited:(st,noPerm)=>`检测到 SIM 卡（${st}），但明细读取受限${noPerm?'：未授予电话权限':'：系统未返回卡信息'}`,
+    simNone:(st)=>`没插 SIM 卡（${st}），纯 WiFi 环境，读不到运营商信息`,
+    noDeviceInfo:'未读取到设备信息',
+    noSysInfo:'未读取到系统信息',
+    noAppInfo:'未读取到应用安装信息',
+    noAppInfo2:'未读取到应用信息',
+    parallel:(list,c)=>`检测到多开/分身容器：${list}${c}`,
+    profiles:(n,c)=>`存在 ${n} 个用户配置（第二空间 / 工作资料 / 多用户）${c}`,
+    cleanProfile:(c)=>`未发现多开容器，单一用户配置${c}`,
+    claudeInstalled:' · 已装 Claude 客户端',
+    noNetState:'未读取到网络状态',
+    noIP:'无法获取出口 IP 信息',
+    intelDown:'多个情报接口都不可达，无法判断线路类型',
+    dcVote:(n,t)=>`机房 / 代理出口（${n} 条证据一致）${t}`,
+    dcOne:(t)=>`疑似机房 / 代理出口（1 条证据）${t}`,
+    residential:(t)=>`住宅 / 商业宽带，未见机房或代理特征${t}`,
+    unsure:(t)=>`无法确认（证据不足，不认定为住宅）${t}`,
+    noV6:'没有可用的 IPv6 出口，不存在绕过',
+    v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，与 IPv4（${v4}）不一致`:'，与 IPv4 一致'}`,
+    rtcLimited:'未能建立探测通道（可能被系统限制），结果不确定',
+    rtcPub:(ip,cc,bad)=>`探测到公网地址 ${ip}${cc?`（${cc}）`:''}${bad?'，与出口地区不一致':''}`,
+    rtcLeakV6:(cc)=>`IPv6 流量绕过隧道，真实出口暴露为 ${cc}`,
+    ipUnlocated:'IP 未定位，无法比对',
+    bothBad:'东八区 + 不支持地区 IP，两个信号同时指向同一处',
+    tzVsIp:(cc)=>`东八区 vs IP ${cc}，时空冲突`,
+    ipUnsup:(cc)=>`IP ${cc} 不在支持名单，时区虽已对齐但地区本身不通过`,
+    aligned:'时区与 IP 地区一致',
+    apiOk:'api.anthropic.com 可连通',
+    apiFail:'api.anthropic.com 不可达',
+    err:'检测异常，未计入',
+    ipCN:(cc,isp)=>`${cc}　${isp}`,
+    ipVeto:(cc)=>`出口 IP 位于官方不支持地区（${cc}），账号创建与使用都不被允许`,
+    variantSC:'简体中文', variantTC:'繁体中文', variantNone:'无中文变体',
+    vFonts:(n,list,v)=>`本机字体表检出 ${n} 个中文字体：${list}${v?'，含厂商字体':''}`,
+    vNoFonts:'本机字体表未检出中文字体',
+    vNoVendorFonts:'未检出厂商字体',
+    simUnknownState:'状态未知',
+    simReady:'已就绪',
+    simNoCarrier:'未知运营商',
+    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'实体卡'}`,
+    simTagDual:(n,a)=>`共 ${n} 张卡：${a}`,
+    simTagLine1:'本机号码可读',
+    simTagGoodSlot:'卡2 为支持地区号码，可用于验证',
+    rootNone:'未发现 Root 痕迹',
+    rootFound:(e)=>`发现 Root 痕迹：${e}`,
+    sysAbnormal:'系统分区异常',
+    emuReal:'真实手机硬件',
+    emuFound:(e)=>`检测到模拟器特征：${e}`,
+    buildAbnormal:'构建属性异常',
+    emuVeto:'运行在模拟器或云手机环境，这是批量注册的主要特征，账号必被判为高危',
+    romOfficial:'官方发布版',
+    romUnofficial:(t,ty)=>`非官方构建 ${t} / ${ty}`,
+    romPatch:(x)=>`（安全补丁 ${x}）`,
+    payPlay:'来自 Google Play 商店',
+    paySideload:'非商店安装（系统内有 Google 服务）',
+    payNoGms:'系统中没有 Google 服务框架（国内应用体系）',
+    payInstalled:(l)=>` · 已装 ${l}`,
+    vpnDefault:'系统级代理已启用',
+    vpnOff:'未检测到系统级代理，流量直连',
+    v6Owner:(op)=>`（${op} IPv6 段）`,
+    opCT:'中国电信', opCU:'中国联通', opCM:'中国移动', opCN:'中国',
+    rtcMdns:(n)=>`内网地址已被 mDNS 匿名化（${n} 条 .local）`,
+    rtcLocalOnly:(n)=>`内网地址可见（${n} 条），但无公网泄露`,
+    rtcNone:'未泄露公网地址',
+    rtcVeto:(cc)=>`实时通信通道泄露了 ${cc} 的公网地址，等于直接暴露真实位置`,
+    evDc:'ip-api 标记为数据中心',
+    evAsn:(asn,name)=>`ASN ${asn} 属批发机房（${name}）`,
+    evAsnName:'ASN 名称含机房特征',
+    evPtr:(h)=>`反向解析 ${h}`,
+    evProxy:'ip-api 标记为代理/VPN',
+    evPcProxy:(t)=>`proxycheck 判定为代理（${t}）`,
+    evPtrThird:(h)=>`反向解析为第三方域名 ${h}（疑似住宅代理）`,
+    evPtrIsp:'反向解析属运营商自有域名',
+    evMobile:'ip-api 判定为移动网络',
+    evPcRes:'proxycheck 判定为住宅',
+    variantSC:'簡體中文', variantTC:'繁體中文', variantNone:'無中文變體',
+    vFonts:(n,list,v)=>`本機字型表檢出 ${n} 個中文字型：${list}${v?'，含廠商字型':''}`,
+    vNoFonts:'本機字型表未檢出中文字型',
+    vNoVendorFonts:'未檢出廠商字型',
+    simUnknownState:'狀態未知',
+    simReady:'已就緒',
+    simNoCarrier:'未知電信商',
+    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'實體卡'}`,
+    simTagDual:(n,a)=>`共 ${n} 張卡：${a}`,
+    simTagLine1:'本機號碼可讀',
+    simTagGoodSlot:'卡2 為支援地區號碼，可用於驗證',
+    rootNone:'未發現 Root 痕跡',
+    rootFound:(e)=>`發現 Root 痕跡：${e}`,
+    sysAbnormal:'系統分區異常',
+    emuReal:'真實手機硬體',
+    emuFound:(e)=>`偵測到模擬器特徵：${e}`,
+    buildAbnormal:'建置屬性異常',
+    emuVeto:'執行於模擬器或雲手機環境，這是批次註冊的主要特徵，帳號必被判為高風險',
+    romOfficial:'官方發布版',
+    romUnofficial:(t,ty)=>`非官方建置 ${t} / ${ty}`,
+    romPatch:(x)=>`（安全補丁 ${x}）`,
+    payPlay:'來自 Google Play 商店',
+    paySideload:'非商店安裝（系統內有 Google 服務）',
+    payNoGms:'系統中沒有 Google 服務框架（本地應用體系）',
+    payInstalled:(l)=>` · 已裝 ${l}`,
+    vpnDefault:'系統級代理已啟用',
+    vpnOff:'未偵測到系統級代理，流量直連',
+    v6Owner:(op)=>`（${op} IPv6 網段）`,
+    opCT:'中國電信', opCU:'中國聯通', opCM:'中國移動', opCN:'中國',
+    rtcMdns:(n)=>`內網位址已被 mDNS 匿名化（${n} 條 .local）`,
+    rtcLocalOnly:(n)=>`內網位址可見（${n} 條），但無公網洩露`,
+    rtcNone:'未洩露公網位址',
+    rtcVeto:(cc)=>`即時通訊通道洩露了 ${cc} 的公網位址，等於直接暴露真實位置`,
+    evDc:'ip-api 標記為資料中心',
+    evAsn:(asn,name)=>`ASN ${asn} 屬批發機房（${name}）`,
+    evAsnName:'ASN 名稱含機房特徵',
+    evPtr:(h)=>`反向解析 ${h}`,
+    evProxy:'ip-api 標記為代理/VPN',
+    evPcProxy:(t)=>`proxycheck 判定為代理（${t}）`,
+    evPtrThird:(h)=>`反向解析為第三方網域 ${h}（疑似住宅代理）`,
+    evPtrIsp:'反向解析屬電信商自有網域',
+    evMobile:'ip-api 判定為行動網路',
+    evPcRes:'proxycheck 判定為住宅',
+    unk:'未知'
+  }
+},
+'zh-TW':{
+  appName:'環境檢測',
+  homeSub:'檢查這台手機是否適合使用 Claude',
+  homeMeta:(n,m)=>`共 ${n} 項訊號 · 依權重計分（總分 ${m}）`,
+  start:'開始檢測',
+  privacy:'僅本機計算，不上傳任何資料',
+  scanning:'正在檢測',
+  score:'綜合得分',
+  detail:'查看各項明細',
+  detailTitle:'檢測明細',
+  again:'重新檢測',
+  disclaimer:'檢測結果僅供參考，不代表 Anthropic 官方判斷',
+  pick:'點擊任一項查看原因與處理辦法',
+  verdictTitle:'檢測結論',
+  vetoTitle:'硬性不過關',
+  grp:{fingerprint:'指紋一致性',device:'裝置完整性',network:'網路出口'},
+  badgeVeto:'否決',
+  k:{got:'測到什麼',why:'為什麼在意',fix:'怎麼改'},
+  ok:'知道了',
+  keyTitle:'IP 情報介面設定',
+  keyDesc:'線路類型判定會向 proxycheck.io 查詢一次。不帶 key 時每個出口 IP 每天 100 次（依你的網路出口 IP 計算，不與其他使用者共用）；填入免費 key 後為 1000 次/天。留空則自動降級為只有 ip-api + 本地規則判定。',
+  keyPlaceholder:'貼上 proxycheck API key（可留空）',
+  cancel:'取消', save:'儲存',
+  langTitle:'語言',
+  pending:(n)=>`${n} 項待改進`, allPass:'全部達標',
+  scScoreLbl:'得分', scWeightLbl:'權重',
+  v:{ok:'可以放心使用',warn:'有一定風險',bad:'不建議使用',stop:'請不要使用'},
+  d:{
+    veto:(n)=>`有 ${n} 項是硬性不過關。不是扣幾分的事：只要踩中一條，註冊和使用都會被判成不支援地區，儲值了也白費。`,
+    ok:'各項都對得上，沒發現明顯矛盾。保持現在這個網路和裝置狀態，別來回切節點。',
+    warn:'有幾處看得出問題。單獨一項一般不致命，但這些訊號是累加的，攢多了信任分就下來了。按明細改完再測一次。',
+    bad:'問題比較多，整體不太像一個普通使用者的正常環境。先照著明細改，再考慮登入。'
+  },
+  items:{
+    '系统时区':{n:'系統時區',why:'時區會暴露你在哪個時區。網路可以繞到美國，手機時間還停在台北，兩邊一對就露餡了。它單獨出現不算大事，但和其他線索疊在一起，就成了人在本地的旁證。',fix:'設定 → 系統 → 日期和時間，關掉自動，手動選到跟出口一致的城市。改完重開本軟體。'},
+    '时区偏移':{n:'時區偏移',why:'除了時區名稱，系統還會單獨報一個 UTC 偏移。有人改了名稱、偏移沒跟上，這種半改的狀態比不改更容易被注意到。',fix:'改完時區重開本軟體，看這裡有沒有跟著變。沒變就是設定沒生效。'},
+    '系统语言':{n:'系統語言',why:'語言清單排第一的那個，等於告訴別人你平時用什麼語言。所有應用都讀得到，是画像裡比較顯眼的一條。',fix:'設定 → 系統 → 語言，把 English 調到第一位。中文留在後面不影響用。'},
+    '中文语言变体':{n:'中文語言變體',why:'清單裡只要還留著簡體或繁體，就會被單獨記一筆。英文排第一、中文還在，等於自己承認兩邊都用。',fix:'只留英文，中文刪掉。'},
+    '系统区域设置':{n:'系統區域設定',why:'介面語言和區域格式是兩個開關。有人把介面改成英文，區域還是本地，日期、數字都按本地習慣顯示。這種表面英文反而比純中文更扎眼。',fix:'設定 → 系統 → 語言和區域，區域也要改成對應國家，別只改語言。'},
+    '中文字体栈':{n:'中文字型堆疊',why:'字型是裝在系統裡的檔案，改語言改不動它。所以這一項看的是手機本身有沒有中文字型，屬於改不掉的證據。',fix:'本機改不了。要換只能換裝置。'},
+    '厂商预装字体':{n:'廠商預裝字型',why:'小米、華為、OPPO 會自帶自家字型，只在中國版機器上出現。看到這些字型，基本就知道手機是從哪來的。',fix:'部分機型能卸載，不能卸的只能靠隔離方案。'},
+    'SIM 与号码':{n:'SIM 與號碼',why:'手機能讀到 SIM 卡上的國家碼，插的哪國卡一目了然，雙卡的話兩張都讀得到。Claude 註冊要的實體號碼，和這個資訊是對得上的。',fix:'盡量用支援地區的實體卡。號碼有沒有被別人用過，只有電信商知道，本機查不到。'},
+    '设备型号':{n:'裝置型號',why:'型號來自系統屬性，直接報出品牌和機型。單獨看意義不大，主要是配合字型、語言一起判斷。',fix:'換不了，也不用換。這項最多影響 1 分。'},
+    'Root / 框架':{n:'Root / 框架',why:'Root 過的機器，裝置資訊可以隨便改，風險系統對這類環境預設不信任。同一台機器上的幾個帳號也容易被串起來。',fix:'沒特別需要就別 Root。'},
+    '模拟器检测':{n:'模擬器檢測',why:'雲手機和模擬器是批次註冊最常用的工具，特徵都寫在系統屬性裡，一查就出來。沾上基本沒救。',fix:'用真機，別在雲手機或模擬器上登入。'},
+    '系统 ROM 状态':{n:'系統 ROM 狀態',why:'看系統是不是官方原版。刷過第三方 ROM 的機器跟普通使用者不太一樣，會和其他異常一起算。',fix:'用官方韌體就行。'},
+    '支付环境':{n:'支付環境',why:'卡號和帳單地址在伺服器那邊，手機上看不到。但能看出你用的是哪套體系：應用從哪個商店裝的、有沒有 Google 服務、裝了什麼支付工具。這幾樣湊起來，大致能判斷你的支付在本地還是國外。',fix:'盡量走 Google Play 裝應用，付款用跟出口地區一致的卡。'},
+    '多开与分身':{n:'多開與分身',why:'一台手機開幾個分身，等於同一台裝置上掛多個帳號。裝置資訊是共用的，一個出事其他都跑不掉。',fix:'一個裝置只留一個帳號環境，分身軟體卸掉。'},
+    '代理隧道状态':{n:'代理隧道狀態',why:'只是看現在有沒有開全域代理。沒開的話，下面的 IP 就是你家的真實位址。',fix:'用代理就開全域模式，別只代理單一應用。'},
+    'IP 归属地':{n:'IP 歸屬地',why:'官方寫得很清楚，只有人在支援地區才能註冊和使用。名單裡沒有中國大陸、港澳、俄羅斯這些地方。這一項不過，別的都白搭。',fix:'換一個支援地區的固定出口，家用寬頻比機房穩妥。別用共享節點，同一個 IP 上可能掛著一堆已經被封的號。'},
+    'IP 类型与纯净度':{n:'IP 類型與純淨度',why:'機房 IP 和家用寬頻待遇完全不同。機房 IP 常被拿去批次註冊，整段都容易被列入黑名單。更麻煩的是，很多賣「家用寬頻」的其實是機房換了名字。所以這裡同時問三個地方：有沒有被標成機房、ASN 歸誰、反向解析指向哪。三條裡兩條對得上，就按機房算。',fix:'用真家用寬頻或行動網路。只能用機房 IP 的話，至少找獨立 IP，別跟人共用。'},
+    'IPv6 泄露':{n:'IPv6 洩漏',why:'大部分代理只管 IPv4。存取支援 IPv6 的網站時，請求會從本地 IPv6 直接溜出去，把真實電信商暴露了。很多人「明明掛著代理還是被封」，問題就在這。',fix:'手機網路設定裡把 IPv6 關掉，或者用能接管 v6 的全域模式。'},
+    '实时通信穿透':{n:'即時通訊穿透',why:'即時通話功能為了連線，會去探本機的網路位址，普通代理攔不住。探到的位址和出口不在一個地方，等於直接告訴對方你真實在哪。',fix:'用全域代理，或者在系統裡限制即時通訊權限。'},
+    '时区与 IP 一致性':{n:'時區與 IP 一致性',why:'這兩項分開看都沒事，放一起就出問題。時區在本地、IP 在東京，一對不上，比單獨任何一項都明顯。',fix:'讓時區跟著出口走，最省事也最有效。'},
+    'Claude 服务连通':{n:'Claude 服務連通',why:'連不上說明代理規則漏了 anthropic 的網域。常見的情況是瀏覽器能用、命令列報 403，因為兩邊走的不是一個出口。',fix:'檢查分流規則，把 anthropic.com、claude.ai、claudeusercontent.com 都放進去。'}
+  },
+  r:{
+    tzCN:(tz)=>`系統時區為中國時區（${tz}），與官方支援地區直接衝突`,
+    tzNote:(tz,ip,m)=>`${tz}（IP 時區 ${ip}${m?'，不一致':'，一致'}）`,
+    tzUnknown:'未識別',
+    simLimited:(st,noPerm)=>`偵測到 SIM 卡（${st}），但明細讀取受限${noPerm?'：未授予電話權限':'：系統未回傳卡資訊'}`,
+    simNone:(st)=>`沒插 SIM 卡（${st}），純 WiFi 環境，讀不到電信商資訊`,
+    noDeviceInfo:'未讀取到裝置資訊',
+    noSysInfo:'未讀取到系統資訊',
+    noAppInfo:'未讀取到應用安裝資訊',
+    noAppInfo2:'未讀取到應用資訊',
+    parallel:(list,c)=>`偵測到多開/分身容器：${list}${c}`,
+    profiles:(n,c)=>`存在 ${n} 個使用者設定（第二空間 / 工作資料 / 多使用者）${c}`,
+    cleanProfile:(c)=>`未發現多開容器，單一使用者設定${c}`,
+    claudeInstalled:' · 已裝 Claude 用戶端',
+    noNetState:'未讀取到網路狀態',
+    noIP:'無法取得出口 IP 資訊',
+    intelDown:'多個情報介面都不可達，無法判斷線路類型',
+    dcVote:(n,t)=>`機房 / 代理出口（${n} 條證據一致）${t}`,
+    dcOne:(t)=>`疑似機房 / 代理出口（1 條證據）${t}`,
+    residential:(t)=>`住宅 / 商業寬頻，未見機房或代理特徵${t}`,
+    unsure:(t)=>`無法確認（證據不足，不認定為住宅）${t}`,
+    noV6:'沒有可用的 IPv6 出口，不存在繞過',
+    v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，與 IPv4（${v4}）不一致`:'，與 IPv4 一致'}`,
+    rtcLimited:'未能建立探測通道（可能被系統限制），結果不確定',
+    rtcPub:(ip,cc,bad)=>`探測到公網位址 ${ip}${cc?`（${cc}）`:''}${bad?'，與出口地區不一致':''}`,
+    rtcLeakV6:(cc)=>`IPv6 流量繞過隧道，真實出口暴露為 ${cc}`,
+    ipUnlocated:'IP 未定位，無法比對',
+    bothBad:'東八區 + 不支援地區 IP，兩個訊號同時指向同一處',
+    tzVsIp:(cc)=>`東八區 vs IP ${cc}，時空衝突`,
+    ipUnsup:(cc)=>`IP ${cc} 不在支援名單，時區雖已對齊但地區本身不通過`,
+    aligned:'時區與 IP 地區一致',
+    apiOk:'api.anthropic.com 可連通',
+    apiFail:'api.anthropic.com 不可達',
+    err:'檢測異常，未計入',
+    ipCN:(cc,isp)=>`${cc}　${isp}`,
+    ipVeto:(cc)=>`出口 IP 位於官方不支援地區（${cc}），帳號建立與使用都不被允許`,
+    unk:'未知'
+  }
+},
+'en':{
+  appName:'Environment Check',
+  homeSub:'Check whether this phone is safe for Claude',
+  homeMeta:(n,m)=>`${n} signals · weighted score (max ${m})`,
+  start:'Start check',
+  privacy:'Runs fully on-device. Nothing is uploaded.',
+  scanning:'Checking',
+  score:'Score',
+  detail:'See all checks',
+  detailTitle:'All checks',
+  again:'Run again',
+  disclaimer:'For reference only. Not an official Anthropic assessment.',
+  pick:'Tap any item to see why it matters',
+  verdictTitle:'Result',
+  vetoTitle:'Blocking issues',
+  grp:{fingerprint:'Fingerprint',device:'Device integrity',network:'Network exit'},
+  badgeVeto:'BLOCK',
+  k:{got:'Detected',why:'Why it matters',fix:'How to fix'},
+  ok:'Got it',
+  keyTitle:'IP intelligence API',
+  keyDesc:'Line-type detection queries proxycheck.io once. Without a key: 100 queries per day, counted per your exit IP (not shared with other users). With a free key: 1,000 per day. Leave empty to fall back to ip-api plus local rules only.',
+  keyPlaceholder:'Paste proxycheck API key (optional)',
+  cancel:'Cancel', save:'Save',
+  langTitle:'Language',
+  pending:(n)=>`${n} to improve`, allPass:'All good',
+  scScoreLbl:'Score', scWeightLbl:'weight',
+  v:{ok:'Safe to use',warn:'Some risk',bad:'Not recommended',stop:'Do not use'},
+  d:{
+    veto:(n)=>`${n} blocking issue(s). This is not about losing points — any single one of them marks the account as coming from an unsupported region. Signing up or paying will not help.`,
+    ok:'Everything lines up. Keep this network and device setup stable, and avoid switching nodes back and forth.',
+    warn:'A few things stand out. None is usually fatal alone, but these signals add up and steadily lower trust. Fix the items below, then run again.',
+    bad:'Quite a few problems. Overall this does not look like a typical user environment. Work through the list before signing in.'
+  },
+  items:{
+    '系统时区':{n:'System timezone',why:'Your timezone reveals where you are. Traffic can be routed through the US while the clock still says Beijing, and the mismatch gives it away. Alone it is minor, but combined with other clues it becomes evidence of the real location.',fix:'Settings → System → Date & time, turn off automatic, then pick a city that matches your exit. Restart the app afterwards.'},
+    '时区偏移':{n:'Timezone offset',why:'Besides the timezone name, the system reports a separate UTC offset. People change the name but the offset lags behind, and a half-changed state draws more attention than leaving it alone.',fix:'After changing the timezone, restart the app and check this value moved. If it did not, the setting did not take effect.'},
+    '系统语言':{n:'System language',why:'Whichever language sits first in the list tells apps what you normally use. Every app can read it, which makes it one of the more visible signals.',fix:'Settings → System → Languages, move English to the top. Keeping Chinese further down is fine.'},
+    '中文语言变体':{n:'Chinese variant present',why:'As long as a Simplified or Traditional Chinese entry stays in the list, it gets recorded separately. English first but Chinese still present reads as using both.',fix:'Keep only English and remove Chinese from the list.'},
+    '系统区域设置':{n:'System locale',why:'Interface language and regional format are two separate switches. Some people switch the interface to English while the region stays China, so dates and numbers still follow local conventions. That surface-level English stands out more than plain Chinese.',fix:'Settings → System → Language & region: change the region too, not just the language.'},
+    '中文字体栈':{n:'CJK fonts installed',why:'Fonts are files installed in the system; changing the language does not touch them. This checks whether the phone itself carries Chinese fonts, which is evidence you cannot edit away.',fix:'Not changeable on this device. Only a different device helps.'},
+    '厂商预装字体':{n:'Vendor fonts',why:'Xiaomi, Huawei and OPPO ship their own fonts, which only appear on Chinese domestic models. Seeing them basically tells you where the phone came from.',fix:'Some models allow uninstalling them; the rest need an isolation setup.'},
+    'SIM 与号码':{n:'SIM and number',why:'The phone can read the country code stored on the SIM, so which country the card belongs to is plain to see, and with dual SIM both are readable. Claude signup requires a real number from a supported region, and this lines up with that.',fix:'Use a physical SIM from a supported region. Whether a number was already used by someone else is only known to the carrier, not readable here.'},
+    '设备型号':{n:'Device model',why:'The model comes from system properties and reports brand and model directly. On its own it means little; it mainly works alongside fonts and language.',fix:'Cannot be changed, and does not need to be. This one is worth at most 1 point.'},
+    'Root / 框架':{n:'Root / framework',why:'On a rooted device device data can be edited freely, and risk systems distrust that by default. Several accounts on the same rooted machine also become easy to link together.',fix:'Avoid rooting unless you really need it.'},
+    '模拟器检测':{n:'Emulator check',why:'Cloud phones and emulators are the most common tool for bulk signups, and their traces sit in system properties where a single read exposes them. Once flagged, recovery is unlikely.',fix:'Use a real phone. Do not sign in from cloud phones or emulators.'},
+    '系统 ROM 状态':{n:'System ROM state',why:'Checks whether the system is the official release. Devices running third-party ROMs look different from ordinary users and get counted alongside other anomalies.',fix:'Stick with official firmware.'},
+    '支付环境':{n:'Payment environment',why:'Card numbers and billing addresses live on the server side and are not readable here. What is visible is which ecosystem you use: which store installed your apps, whether Google services exist, which payment apps are present. Together these roughly tell whether your payments are domestic or overseas.',fix:'Install apps through Google Play where possible, and pay with a card matching your exit region.'},
+    '多开与分身':{n:'Cloned apps / profiles',why:'Running several app clones on one phone means several accounts on one device. Device data is shared, so if one is flagged the rest go with it.',fix:'Keep one account environment per device and uninstall cloning tools.'},
+    '代理隧道状态':{n:'Proxy tunnel state',why:'This only reports whether a system-wide proxy is active. If it is not, the IP below is your real home address.',fix:'Use global mode when proxying, not per-app proxying.'},
+    'IP 归属地':{n:'IP location',why:'The policy is explicit: only people physically in supported regions may create and use an account. The list excludes mainland China, Hong Kong, Macau and Russia. If this one fails, nothing else matters.',fix:'Use a fixed exit in a supported region; residential is safer than datacenter. Avoid shared nodes — dozens of already-banned accounts may sit on the same IP.'},
+    'IP 类型与纯净度':{n:'IP type and cleanliness',why:'Datacenter IPs and home broadband are treated very differently. Datacenter ranges get used for bulk signups and often end up blocklisted wholesale. Worse, many “residential” proxies are datacenter IPs under a new name. So this asks three places at once: whether it is flagged as hosting, who owns the ASN, and where reverse DNS points. Two of three pointing at a datacenter is enough to call it one.',fix:'Use genuine home broadband or mobile data. If only datacenter IPs are available, at least get a dedicated one instead of sharing.'},
+    'IPv6 泄露':{n:'IPv6 leak',why:'Most proxies only handle IPv4. When a site supports IPv6, the request slips out through the local IPv6 route and exposes your real carrier. This is the usual reason people get blocked even while running a proxy.',fix:'Turn off IPv6 in the phone network settings, or use a global mode that also captures v6.'},
+    '实时通信穿透':{n:'WebRTC leak',why:'Real-time calling probes local network addresses in order to connect, and ordinary proxies cannot stop it. If the address it finds is in a different place than your exit, you have told them where you really are.',fix:'Use a global proxy, or restrict real-time communication permissions in the system.'},
+    '时区与 IP 一致性':{n:'Timezone vs IP',why:'Either one alone is fine; together they become a problem. Timezone in Beijing with an IP in Tokyo is a mismatch more obvious than either signal by itself.',fix:'Let the timezone follow your exit. Cheapest and most effective step.'},
+    'Claude 服务连通':{n:'Claude reachability',why:'Failing to connect means the proxy rules miss an anthropic domain. The usual symptom is a working browser but a 403 from the command line, because the two use different exits.',fix:'Check your routing rules and include anthropic.com, claude.ai and claudeusercontent.com.'}
+  },
+  r:{
+    tzCN:(tz)=>`System timezone is a China timezone (${tz}), directly conflicting with supported regions`,
+    tzNote:(tz,ip,m)=>`${tz} (IP timezone ${ip}, ${m?'mismatch':'match'})`,
+    tzUnknown:'unknown',
+    simLimited:(st,noPerm)=>`SIM present (${st}) but details are restricted${noPerm?': phone permission not granted':': system returned no card info'}`,
+    simNone:(st)=>`No SIM card (${st}) — Wi-Fi only, no carrier info readable`,
+    noDeviceInfo:'Device info unreadable',
+    noSysInfo:'System info unreadable',
+    noAppInfo:'Install info unreadable',
+    noAppInfo2:'App info unreadable',
+    parallel:(list,c)=>`Cloning container detected: ${list}${c}`,
+    profiles:(n,c)=>`${n} user profiles present (second space / work profile / multi-user)${c}`,
+    cleanProfile:(c)=>`No cloning container, single user profile${c}`,
+    claudeInstalled:' · Claude app installed',
+    noNetState:'Network state unreadable',
+    noIP:'Cannot obtain exit IP info',
+    intelDown:'All intelligence APIs unreachable, cannot classify the line',
+    dcVote:(n,t)=>`Datacenter / proxy exit (${n} consistent signals)${t}`,
+    dcOne:(t)=>`Likely datacenter / proxy exit (1 signal)${t}`,
+    residential:(t)=>`Residential / business broadband, no hosting or proxy markers${t}`,
+    unsure:(t)=>`Unconfirmed (insufficient evidence, not classified as residential)${t}`,
+    noV6:'No IPv6 exit available, nothing to bypass',
+    v6Is:(cc,owner,leak,v4)=>`IPv6 exit ${cc}${owner}${leak?`, differs from IPv4 (${v4})`:', same as IPv4'}`,
+    rtcLimited:'Probe channel could not be established (possibly restricted), result uncertain',
+    rtcPub:(ip,cc,bad)=>`Public address detected ${ip}${cc?` (${cc})`:''}${bad?', differs from exit region':''}`,
+    rtcLeakV6:(cc)=>`IPv6 bypasses the tunnel, real exit exposed as ${cc}`,
+    ipUnlocated:'IP not located, cannot compare',
+    bothBad:'UTC+8 plus an unsupported-region IP — both signals point the same way',
+    tzVsIp:(cc)=>`UTC+8 vs IP ${cc}, a time-space conflict`,
+    ipUnsup:(cc)=>`IP ${cc} is not on the supported list; timezone matches but the region itself fails`,
+    aligned:'Timezone and IP region agree',
+    apiOk:'api.anthropic.com reachable',
+    apiFail:'api.anthropic.com unreachable',
+    err:'Check errored, not counted',
+    ipCN:(cc,isp)=>`${cc}　${isp}`,
+    ipVeto:(cc)=>`Exit IP is in an unsupported region (${cc}); account creation and use are not allowed`,
+    variantSC:'Simplified Chinese', variantTC:'Traditional Chinese', variantNone:'no Chinese variant',
+    vFonts:(n,list,v)=>`${n} CJK fonts in the system table: ${list}${v?', including vendor fonts':''}`,
+    vNoFonts:'No CJK fonts found in the system table',
+    vNoVendorFonts:'No vendor fonts found',
+    simUnknownState:'unknown state',
+    simReady:'ready',
+    simNoCarrier:'unknown carrier',
+    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'physical'}`,
+    simTagDual:(n,a)=>`${n} cards: ${a}`,
+    simTagLine1:'own number readable',
+    simTagGoodSlot:'slot 2 is a supported-region number usable for verification',
+    rootNone:'No root traces',
+    rootFound:(e)=>`Root traces found: ${e}`,
+    sysAbnormal:'system partition anomaly',
+    emuReal:'Real phone hardware',
+    emuFound:(e)=>`Emulator traces: ${e}`,
+    buildAbnormal:'build property anomaly',
+    emuVeto:'Running on an emulator or cloud phone, the primary tool for bulk signups — the account will be treated as high risk',
+    romOfficial:'Official release',
+    romUnofficial:(t,ty)=>`Unofficial build ${t} / ${ty}`,
+    romPatch:(x)=>` (security patch ${x})`,
+    payPlay:'Installed from Google Play',
+    paySideload:'Not from a store (Google services present)',
+    payNoGms:'No Google services on the system (domestic app ecosystem)',
+    payInstalled:(l)=>` · installed ${l}`,
+    vpnDefault:'System-level proxy active',
+    vpnOff:'No system-level proxy, traffic goes direct',
+    v6Owner:(op)=>` (${op} IPv6 block)`,
+    opCT:'China Telecom', opCU:'China Unicom', opCM:'China Mobile', opCN:'China',
+    rtcMdns:(n)=>`Local addresses anonymised by mDNS (${n} .local)`,
+    rtcLocalOnly:(n)=>`Local addresses visible (${n}) but no public leak`,
+    rtcNone:'No public address leaked',
+    rtcVeto:(cc)=>`WebRTC leaked a public address in ${cc}, exposing the real location`,
+    evDc:'ip-api flags it as a datacenter',
+    evAsn:(asn,name)=>`AS${asn} is a bulk hosting ASN (${name})`,
+    evAsnName:'ASN name looks like hosting',
+    evPtr:(h)=>`reverse DNS ${h}`,
+    evProxy:'ip-api flags it as proxy/VPN',
+    evPcProxy:(t)=>`proxycheck classifies it as a proxy (${t})`,
+    evPtrThird:(h)=>`reverse DNS points to a third-party domain ${h} (likely a residential proxy)`,
+    evPtrIsp:'reverse DNS belongs to the carrier',
+    evMobile:'ip-api sees a mobile network',
+    evPcRes:'proxycheck classifies it as residential',
+    unk:'unknown'
+  }
+},
+'ja':{
+  appName:'環境チェック',
+  homeSub:'この端末が Claude に適しているか確認します',
+  homeMeta:(n,m)=>`全 ${n} 項目 · 重み付き採点（満点 ${m}）`,
+  start:'チェック開始',
+  privacy:'すべて端末内で処理。何も送信しません。',
+  scanning:'チェック中',
+  score:'総合スコア',
+  detail:'項目の詳細を見る',
+  detailTitle:'チェック項目',
+  again:'もう一度',
+  disclaimer:'参考情報です。Anthropic 公式の判断ではありません。',
+  pick:'項目をタップすると理由と対処法が見られます',
+  verdictTitle:'判定',
+  vetoTitle:'致命的な項目',
+  grp:{fingerprint:'フィンガープリント',device:'端末の健全性',network:'ネットワーク出口'},
+  badgeVeto:'不可',
+  k:{got:'検出結果',why:'なぜ重要か',fix:'対処法'},
+  ok:'了解',
+  keyTitle:'IP 情報 API',
+  keyDesc:'回線種別の判定で proxycheck.io に 1 回問い合わせます。キーなしの場合、出口 IP ごとに 1 日 100 回（他の利用者と共有されません）。無料キーを入れると 1 日 1,000 回。空欄なら ip-api とローカルルールのみに切り替わります。',
+  keyPlaceholder:'proxycheck API キーを貼り付け（任意）',
+  cancel:'キャンセル', save:'保存',
+  langTitle:'言語',
+  pending:(n)=>`${n} 項目に改善点`, allPass:'すべて良好',
+  scScoreLbl:'得点', scWeightLbl:'重み',
+  v:{ok:'安心して使えます',warn:'やや危険',bad:'おすすめしません',stop:'使用しないでください'},
+  d:{
+    veto:(n)=>`${n} 件が致命的です。点数の問題ではありません。1 つでも該当すると、非対応地域からの利用と判定され、登録も支払いも無駄になります。`,
+    ok:'すべて一致しています。現在のネットワークと端末の状態を保ち、ノードを頻繁に切り替えないでください。',
+    warn:'いくつか気になる点があります。単独では致命的でなくても、シグナルは積み上がり信頼度が下がります。下の項目を直してから再実行してください。',
+    bad:'問題が多めです。全体として一般的な利用者の環境に見えません。一覧に沿って修正してからログインしてください。'
+  },
+  items:{
+    '系统时区':{n:'システムタイムゾーン',why:'タイムゾーンは居場所を明かします。通信をアメリカ経由にしても端末の時刻が北京のままだと、その食い違いで分かります。単独では小さな話ですが、他の手がかりと重なると在住地の傍証になります。',fix:'設定 → システム → 日付と時刻で自動を切り、出口に合った都市を選びます。変更後にアプリを再起動してください。'},
+    '时区偏移':{n:'タイムゾーン偏移',why:'名前とは別に UTC オフセットも個別に報告されます。名前だけ変えてオフセットが追随していない中途半端な状態は、変更しないより目立ちます。',fix:'変更後にアプリを再起動し、この値が変わったか確認します。変わっていなければ設定が効いていません。'},
+    '系统语言':{n:'システム言語',why:'一覧の先頭の言語は、普段どの言語を使うかを示します。どのアプリからも読めるため、目立つシグナルの一つです。',fix:'設定 → システム → 言語で English を先頭へ。中国語は後ろに残して構いません。'},
+    '中文语言变体':{n:'中国語の変種',why:'簡体字・繁体字の項目が一覧に残っているだけで別途記録されます。English が先頭でも中国語が残っていれば、両方使っていると読まれます。',fix:'English のみ残し、中国語は削除します。'},
+    '系统区域设置':{n:'システムロケール',why:'表示言語と地域形式は別々のスイッチです。表示だけ英語にして地域が中国のままだと、日付や数字は国内方式のまま。この表面だけの英語は、完全な中国語環境より目立ちます。',fix:'設定 → システム → 言語と地域で、言語だけでなく地域も変更します。'},
+    '中文字体栈':{n:'CJK フォント',why:'フォントはシステムに入ったファイルで、言語を変えても動きません。端末自体に中国語フォントがあるかを見る項目で、消せない証拠です。',fix:'この端末では変更できません。別の端末が必要です。'},
+    '厂商预装字体':{n:'メーカー独自フォント',why:'Xiaomi、Huawei、OPPO は独自フォントを積んでおり、中国国内モデルにしか現れません。これが見つかれば端末の出自がほぼ分かります。',fix:'機種によっては削除できます。できない場合は分離環境が必要です。'},
+    'SIM 与号码':{n:'SIM と電話番号',why:'端末は SIM に書き込まれた国コードを読めるため、どの国のカードかは一目で分かります。デュアル SIM なら両方読めます。Claude の登録に必要な実番号と、この情報は対応しています。',fix:'対応地域の物理 SIM を使ってください。番号が他人に使われたかは通信事業者しか分からず、ここでは読めません。'},
+    '设备型号':{n:'端末モデル',why:'モデルはシステムプロパティから直接取れ、ブランドと型番が分かります。単独では意味が薄く、主にフォントや言語と合わせて判断材料になります。',fix:'変更できませんし、する必要もありません。最大 1 点の影響です。'},
+    'Root / 框架':{n:'Root / フレームワーク',why:'Root 済みの端末は端末情報を自由に書き換えられ、リスク判定は既定で信用しません。同じ端末上の複数アカウントも結び付けられやすくなります。',fix:'特別な理由がなければ Root しないでください。'},
+    '模拟器检测':{n:'エミュレータ検出',why:'クラウド端末やエミュレータは一括登録の定番で、痕跡はシステムプロパティに残り一度で分かります。該当すると回復は難しいです。',fix:'実機を使ってください。クラウド端末やエミュレータでログインしないでください。'},
+    '系统 ROM 状态':{n:'システム ROM の状態',why:'システムが公式リリースかを見ます。サードパーティ ROM の端末は一般利用者と異なり、他の異常と合わせて評価されます。',fix:'公式ファームウェアを使ってください。'},
+    '支付环境':{n:'決済環境',why:'カード番号や請求先はサーバ側にあり、端末では読めません。分かるのはどの体系かです。どのストアから入れたか、Google サービスがあるか、どの決済アプリがあるか。これらを合わせると国内か海外かがおおよそ判断できます。',fix:'可能なら Google Play から導入し、出口地域に合ったカードで支払います。'},
+    '多开与分身':{n:'複製アプリ / プロファイル',why:'1 台で複製アプリを動かすと、同じ端末に複数アカウントを持つことになります。端末情報は共通なので、1 つ検出されれば他も連動します。',fix:'1 端末につき 1 つのアカウント環境にし、複製ツールを削除します。'},
+    '代理隧道状态':{n:'プロキシ状態',why:'システム全体のプロキシが有効かをseen だけです。無効なら下の IP は自宅の実アドレスです。',fix:'プロキシはアプリ単位ではなくグローバルモードで使います。'},
+    'IP 归属地':{n:'IP の所在地',why:'方針は明確で、対応地域に物理的にいる人だけが登録・利用できます。中国本土、香港、マカオ、ロシアは対象外です。ここで落ちると他は意味がありません。',fix:'対応地域の固定出口を使い、データセンターより住宅回線が安全です。共有ノードは避けてください。同じ IP に既に停止されたアカウントが多数ある場合があります。'},
+    'IP 类型与纯净度':{n:'IP 種別と健全度',why:'データセンター IP と家庭回線は扱いが全く違います。データセンター帯は一括登録に使われ、まとめて遮断されがちです。さらに「住宅回線」として売られている多くは名前を変えたデータセンターです。そこで 3 か所に同時に問います。ホスティング判定、ASN の所有者、逆引きの向き先。3 つのうち 2 つが一致すればデータセンター扱いです。',fix:'本物の家庭回線かモバイル回線を使います。データセンターしか無い場合は、共有せず専用 IP を選んでください。'},
+    'IPv6 泄露':{n:'IPv6 リーク',why:'多くのプロキシは IPv4 しか扱いません。IPv6 対応サイトではローカルの IPv6 経路から直接出て、実際の回線事業者が露出します。プロキシをかけているのに止められる主な原因がこれです。',fix:'端末のネットワーク設定で IPv6 を切り、または v6 も通すグローバルモードを使ってください。'},
+    '实时通信穿透':{n:'WebRTC リーク',why:'リアルタイム通話は接続のため端末のネットワークアドレスを探り、通常のプロキシでは止められません。見つかったアドレスが出口と違う場所なら、実際の居場所を伝えたことになります。',fix:'グローバルプロキシを使うか、システムでリアルタイム通信の権限を制限します。'},
+    '时区与 IP 一致性':{n:'タイムゾーンと IP',why:'どちらか単独なら問題ありませんが、組み合わさると問題になります。タイムゾーンが北京で IP が東京なら、どちらか単独より明確な矛盾です。',fix:'タイムゾーンを出口に合わせるのが最も簡単で効果的です。'},
+    'Claude 服务连通':{n:'Claude への到達性',why:'接続できないのはプロキシ設定が anthropic のドメインを漏らしているためです。ブラウザは動くのにコマンドラインで 403 になるのは、出口が異なるためです。',fix:'分流ルールを確認し、anthropic.com、claude.ai、claudeusercontent.com を対象に含めてください。'}
+  },
+  r:{
+    tzCN:(tz)=>`システムタイムゾーンが中国時間（${tz}）で、対応地域と直接矛盾します`,
+    tzNote:(tz,ip,m)=>`${tz}（IP のタイムゾーン ${ip}、${m?'不一致':'一致'}）`,
+    tzUnknown:'不明',
+    simLimited:(st,noPerm)=>`SIM を検出（${st}）しましたが詳細は制限されています${noPerm?'：電話権限が未許可':': システムがカード情報を返しません'}`,
+    simNone:(st)=>`SIM なし（${st}）— Wi-Fi のみ、回線情報は読めません`,
+    noDeviceInfo:'端末情報を取得できません',
+    noSysInfo:'システム情報を取得できません',
+    noAppInfo:'インストール情報を取得できません',
+    noAppInfo2:'アプリ情報を取得できません',
+    parallel:(list,c)=>`複製コンテナを検出：${list}${c}`,
+    profiles:(n,c)=>`ユーザープロファイルが ${n} 個あります（セカンドスペース / 仕事用 / マルチユーザー）${c}`,
+    cleanProfile:(c)=>`複製コンテナなし、単一プロファイル${c}`,
+    claudeInstalled:' · Claude アプリ導入済み',
+    noNetState:'ネットワーク状態を取得できません',
+    noIP:'出口 IP 情報を取得できません',
+    intelDown:'情報 API がすべて到達不能で回線種別を判定できません',
+    dcVote:(n,t)=>`データセンター / プロキシ出口（${n} 件の一致した根拠）${t}`,
+    dcOne:(t)=>`データセンター / プロキシの可能性（根拠 1 件）${t}`,
+    residential:(t)=>`住宅 / 業務用回線、ホスティングやプロキシの兆候なし${t}`,
+    unsure:(t)=>`確認できません（根拠不足、住宅とは判定しません）${t}`,
+    noV6:'利用可能な IPv6 出口がなく、迂回はありません',
+    v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`、IPv4（${v4}）と不一致`:'、IPv4 と一致'}`,
+    rtcLimited:'検出チャネルを確立できません（制限の可能性）、結果は不確定',
+    rtcPub:(ip,cc,bad)=>`公開アドレスを検出 ${ip}${cc?`（${cc}）`:''}${bad?'、出口地域と不一致':''}`,
+    rtcLeakV6:(cc)=>`IPv6 がトンネルを迂回し、実際の出口が ${cc} として露出`,
+    ipUnlocated:'IP を特定できず比較できません',
+    bothBad:'UTC+8 かつ非対応地域の IP — 2 つのシグナルが同じ方向を指しています',
+    tzVsIp:(cc)=>`UTC+8 と IP ${cc}、時空間の矛盾`,
+    ipUnsup:(cc)=>`IP ${cc} は対応リストにありません。タイムゾーンは合っていますが地域自体が不合格です`,
+    aligned:'タイムゾーンと IP 地域が一致',
+    apiOk:'api.anthropic.com に到達可能',
+    apiFail:'api.anthropic.com に到達不可',
+    err:'チェック異常、集計外',
+    ipCN:(cc,isp)=>`${cc}　${isp}`,
+    ipVeto:(cc)=>`出口 IP が非対応地域（${cc}）にあり、アカウント作成も利用も許可されません`,
+    variantSC:'簡体字中国語', variantTC:'繁体字中国語', variantNone:'中国語の変種なし',
+    vFonts:(n,list,v)=>`システムフォント表に中国語フォント ${n} 個：${list}${v?'（メーカー製を含む）':''}`,
+    vNoFonts:'システムフォント表に中国語フォントなし',
+    vNoVendorFonts:'メーカー製フォントなし',
+    simUnknownState:'状態不明',
+    simReady:'準備完了',
+    simNoCarrier:'不明な事業者',
+    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'物理カード'}`,
+    simTagDual:(n,a)=>`${n} 枚のカード：${a}`,
+    simTagLine1:'自局番号が読み取り可能',
+    simTagGoodSlot:'スロット 2 は対応地域の番号で、認証に使えます',
+    rootNone:'Root の痕跡なし',
+    rootFound:(e)=>`Root の痕跡：${e}`,
+    sysAbnormal:'システムパーティションの異常',
+    emuReal:'実機ハードウェア',
+    emuFound:(e)=>`エミュレータの特徴：${e}`,
+    buildAbnormal:'ビルドプロパティの異常',
+    emuVeto:'エミュレータまたはクラウド端末で実行中。一括登録の主な手段であり、高リスクと判定されます',
+    romOfficial:'公式リリース',
+    romUnofficial:(t,ty)=>`非公式ビルド ${t} / ${ty}`,
+    romPatch:(x)=>`（セキュリティパッチ ${x}）`,
+    payPlay:'Google Play からインストール',
+    paySideload:'ストア以外からインストール（Google サービスあり）',
+    payNoGms:'Google サービスなし（国内アプリ体系）',
+    payInstalled:(l)=>` · 導入済み ${l}`,
+    vpnDefault:'システム全体のプロキシが有効',
+    vpnOff:'システムプロキシなし、直接接続',
+    v6Owner:(op)=>`（${op} の IPv6 ブロック）`,
+    opCT:'中国電信', opCU:'中国聯通', opCM:'中国移動', opCN:'中国',
+    rtcMdns:(n)=>`ローカルアドレスは mDNS で匿名化（${n} 件の .local）`,
+    rtcLocalOnly:(n)=>`ローカルアドレスが見える（${n} 件）が公開アドレスの漏洩なし`,
+    rtcNone:'公開アドレスの漏洩なし',
+    rtcVeto:(cc)=>`WebRTC が ${cc} の公開アドレスを漏らし、実際の位置が露呈しました`,
+    evDc:'ip-api がデータセンターと判定',
+    evAsn:(asn,name)=>`AS${asn} は卸売ホスティング（${name}）`,
+    evAsnName:'ASN 名にホスティングの特徴',
+    evPtr:(h)=>`逆引き ${h}`,
+    evProxy:'ip-api がプロキシ/VPN と判定',
+    evPcProxy:(t)=>`proxycheck がプロキシと判定（${t}）`,
+    evPtrThird:(h)=>`逆引きが第三者ドメイン ${h}（住宅プロキシの疑い）`,
+    evPtrIsp:'逆引きが回線事業者のドメイン',
+    evMobile:'ip-api がモバイル回線と判定',
+    evPcRes:'proxycheck が住宅と判定',
+    unk:'不明'
+  }
+}
+};
+
+/* 取当前语言的字符串包 */
+const L = () => I18N[LANG] || I18N['zh-CN'];
+/* 取某一项的本地化名称/说明 */
+function itemText(key){
+  const it = L().items[key];
+  if(it) return it;
+  const fb = I18N['zh-CN'].items[key] || {};
+  return {n:fb.n||key, why:fb.why||'', fix:fb.fix||''};
+}
+/* 取结果值文案 */
+const R = () => L().r;
+
+let PC_KEY='';
+try{ PC_KEY=localStorage.getItem('pcKey')||''; }catch(e){}
+const state={cc:'',ip:'',asn:'',isp:'',org:'',asname:'',ipTz:'',hosting:null,proxy:null,mobile:null,reverse:'',
+             dcVotes:0,resVotes:0,evidence:[],sourceCount:0,
+             fakeHome:false,intelReady:false,dcByAsn:false,revDc:false};
+
+async function fetchJSON(url,ms){
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||8000);
+  try{const r=await fetch(url,{signal:c.signal,cache:'no-store'});clearTimeout(t);return await r.json();}
+  catch(e){clearTimeout(t);return null;}
+}
+
+// 已知批发机房 / 廉价 VPS 的 ASN：机场"假家宽"最常见的批发来源
+const DC_ASN={'20473':'Vultr/Choopa','63949':'Akamai-Linode','16509':'AWS','15169':'Google Cloud',
+'14061':'DigitalOcean','9009':'M247','132203':'Tencent Cloud','45102':'Alibaba Cloud','31898':'Oracle Cloud',
+'16276':'OVH','24940':'Hetzner','51167':'Contabo','40676':'Psychz','53667':'FranTech','35913':'DediPath',
+'62240':'Clouvider','49981':'WorldStream','61317':'Digital Energy','3223':'Voxility','59711':'HZ Hosting',
+'8075':'Microsoft Azure','210644':'AEZA','49505':'Selectel','197695':'Reg.ru',
+// 常见廉价 VPS / 转售 / 机场批发来源
+'36352':'ColoCrossing','46844':'Sharktech','19531':'Namecheap Hosting','22612':'Namecheap',
+'25820':'IT7 Networks','54600':'Kamatera','63018':'HostUS','205544':'Leaseweb','28753':'Leaseweb DE',
+'136787':'TEFINCOM (NordVPN)','212238':'Datacamp/CDN77','60068':'Datacamp','401115':'Pfcloud',
+'51396':'Pfcloud','200651':'Flokinet','29802':'Hivelocity','33083':'Bacloud','49432':'Cloudie',
+'135377':'UCloud','37963':'Alibaba Hangzhou','45090':'Tencent Shenzhen','58879':'Zenlayer',
+'21859':'Zenlayer','17439':'Netmagic','4766':'Korea Telecom IDC','9370':'Sakura Internet',
+'2519':'ARTERIA','4725':'ODN SoftBank'};
+
+const HOME_KW=['telecom','unicom','mobile','broadband','fiber','fibre','cable','dsl','comcast','verizon',
+'at&t','charter','cox','centurylink','frontier','windstream','virgin','optimum','residential','home',
+'chinanet','cnc','cmcc','telefonica','orange','swisscom','kddi','ntt','singtel','starhub'];
+
+/* 原生优先的 HTTP：原生层不受跨域限制，可用不支持 CORS 的情报接口 */
+function netGet(url){
+  try{
+    if(window.Native && window.Native.httpGet){
+      const body=window.Native.httpGet(url);
+      console.log('[NET] '+url.slice(8,42)+' len='+(body?body.length:0));
+      if(body) return Promise.resolve(JSON.parse(body));
+    }
+  }catch(e){}
+  return fetchJSON(url);
+}
+
+/* 每次检测前重置，避免沿用上一次的结论 */
+function resetIntel(){
+  state.ip='';state.cc='';state.asn='';state.isp='';state.org='';state.asname='';
+  state.hosting=null;state.proxy=null;state.mobile=null;state.reverse='';
+  state.intelReady=false;state.dcByAsn=false;state.dcVotes=0;state.resVotes=0;
+  state.evidence=[];state.fakeHome=false;state.sourceCount=0;state.ipTz='';
+}
+
+async function loadIPIntel(){
+ try{
+  resetIntel();
+
+  // 源 1：ip-api —— 出口 IP、归属、hosting / proxy / mobile / reverse 一次拿全
+  const a=await netGet('http://ip-api.com/json/?fields=status,query,country,countryCode,city,timezone,isp,org,as,asname,reverse,mobile,proxy,hosting');
+  let apiOk=false;
+  if(a&&a.status==='success'){
+    apiOk=true; state.sourceCount++;
+    state.ip=a.query||'';
+    state.cc=(a.countryCode||'').toUpperCase();
+    state.city=a.city||''; state.ipTz=a.timezone||'';
+    state.isp=a.isp||''; state.org=a.org||''; state.asname=a.asname||'';
+    const m=/^AS(\d+)/.exec(a.as||'');
+    if(m) state.asn=m[1];
+    state.hosting=a.hosting===true;
+    state.proxy=a.proxy===true;
+    state.mobile=a.mobile===true;
+    state.reverse=a.reverse||'';
+  }
+
+  // 源 2：ipwho.is 兜底补齐（原生请求偶发返回空，所以只做补充）
+  if(!state.ip||!state.cc){
+    const g=await netGet('https://ipwho.is/');
+    if(g&&g.ip){
+      state.ip=g.ip||state.ip;
+      state.cc=(g.country_code||state.cc||'').toUpperCase();
+      const con=g.connection||{};
+      state.isp=state.isp||con.isp||'';
+      state.org=state.org||con.org||'';
+      if(!state.asn) state.asn=String(con.asn||'');
+    }
+  }
+
+  // 源 3：proxycheck —— proxy / type(VPN|PUB|RES|Business)
+  let pc=null;
+  if(state.ip){
+    const q='https://proxycheck.io/v2/'+state.ip+'?vpn=1&asn=1'+(PC_KEY?('&key='+encodeURIComponent(PC_KEY)):'');
+    const raw=await netGet(q);
+    if(raw&&raw.status==='ok'){
+      const key=Object.keys(raw).find(k=>k!=='status');
+      if(key&&raw[key]&&typeof raw[key]==='object'){
+        pc=raw[key]; state.sourceCount++;
+        if(!state.reverse && pc.hostname) state.reverse=String(pc.hostname);
+      }
+    }
+  }
+  state.intelReady = apiOk || !!pc;
+
+  /* ---------- 证据计票：机房票 vs 住宅票 ---------- */
+  const ev=[]; let dc=0, res=0;
+  const asnName=((state.asname||'')+' '+(state.org||'')+' '+(state.isp||'')).toLowerCase();
+  const ptr=(state.reverse||'').toLowerCase();
+  const hostName=/hosting|datacenter|data center|cloud|server|colo|\bvps\b|机房|虚拟/.test(asnName);
+  const hostPtr=/vps|server|colo|dedicated|static|cloud|node|m247|vultr|linode|digitalocean|ovh|contabo|hetzner|choopa/.test(ptr);
+
+  if(apiOk&&state.hosting){ dc++; ev.push(R().evDc); }
+  if(DC_ASN[state.asn]){ dc++; ev.push(R().evAsn(state.asn,DC_ASN[state.asn])); }
+  if(hostName){ dc++; ev.push(R().evAsnName); }
+  if(hostPtr){ dc++; ev.push(R().evPtr(state.reverse)); }
+  if(apiOk&&state.proxy){ dc++; ev.push(R().evProxy); }
+  if(pc&&pc.proxy==='yes'){ dc++; ev.push(R().evPcProxy(pc.type||R().unk)); }
+
+  /* 反向解析归属：真家宽的 PTR 一般挂在运营商自有域名下
+     （如 *.ocn.ne.jp / *.bb.teac.ne.jp）；若 PTR 是第三方短域名，
+     多半是"住宅代理"服务商把机房/代理节点挂进住宅网段 */
+  const ispName=(state.isp+' '+(state.org||'')).toLowerCase();
+  const ispKeys=['sony','ocn','ntt','kddi','softbank','comcast','verizon','charter','cox','centurylink',
+                 'frontier','virgin','sky','orange','telefonica','swisscom','singtel','starhub',
+                 'chinanet','unicom','cmcc','telecom','ntt.com','plala','biglobe','so-net'];
+  const ispKeyHit=ispKeys.find(k=>ispName.includes(k));
+  const ptrIsIsp=!!(ispKeyHit&&ptr.includes(ispKeyHit));
+  const ptrGeneric=/^(ip[-.]?\d|c-?\d|static|dynamic|ppp|dsl|bb|host-?\d|xdsl|pool|rev|node)/.test(ptr)||ptr==='';
+  const ptrThirdParty=!!ptr&&!ptrIsIsp&&!ptrGeneric&&/\.[a-z]{2,}$/.test(ptr);
+  if(ptrThirdParty){ dc++; ev.push(R().evPtrThird(state.reverse)); }
+  if(ptrIsIsp){ res++; ev.push(R().evPtrIsp); }
+
+  if(apiOk&&state.mobile&&!state.hosting){ res+=2; ev.push(R().evMobile); }
+  if(apiOk&&!state.hosting&&!state.proxy){ res++; }
+  if(pc&&pc.proxy==='no'){ res++; }
+  if(pc&&/residential/i.test(pc.type||'')){ res+=2; ev.push(R().evPcRes); }
+
+  state.dcVotes=dc; state.resVotes=res; state.evidence=ev;
+  state.dcByAsn=!!DC_ASN[state.asn];
+  state.fakeHome = dc>0 && /telecom|unicom|broadband|fiber|cable|comcast|verizon/.test(asnName);
+  console.log('[INTEL] ip='+state.ip+' apiOk='+apiOk+' pcOk='+(!!pc)+' dcVotes='+dc+' resVotes='+res+' ev='+JSON.stringify(ev));
+ }catch(err){
+  console.log('[INTEL-ERR] '+err+' | native='+(!!(window.Native&&window.Native.httpGet)));
+ }
+}
+
+/* 只查一次 IP 情报，供多个检测项复用 */
+let intelPromise=null;
+function ensureIntel(){
+  if(!intelPromise) intelPromise=loadIPIntel();
+  return intelPromise;
+}
+
+/* ISP 名称清洗：部分接口对中国 IP 返回 "No.31,Jin-rong Street" 这类地址串 */
+function ispLabel(){
+  const s=state.isp||'';
+  const dirty=/^\s*\d/.test(s)||/\d+\s*,/.test(s)||(/street|road|avenue/i.test(s)&&s.split(' ').length<=2);
+  if(dirty) return state.org||state.asname||s||R().unk;
+  return s||state.org||state.asname||R().unk;
+}
+
+/* ===================== 检测项 ===================== */
+/* 每项按权重计分；文案从语言包取；veto 字段存在即为一票否决 */
+const CHECKS=[
+/* ---------- 指纹一致性 ---------- */
+{cat:'fp',key:'系统时区',w:7,fn:async()=>{
+  await ensureIntel();
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  const cn=['Asia/Shanghai','Asia/Urumqi','Asia/Chongqing','Asia/Harbin','Asia/Kashgar'].includes(tz);
+  const terr=['Asia/Hong_Kong','Asia/Macau','Asia/Taipei'].includes(tz);
+  // 隐藏规则：风控不只看时区本身，更看它和出口 IP 的时区是否一致
+  const ipTz=(typeof state!=='undefined'&&state.ipTz)||'';
+  let note=tz||R().tzUnknown;
+  let mism=false;
+  if(ipTz&&tz){
+    mism=ipTz!==tz;
+    note=R().tzNote(tz,ipTz,mism);
+  }
+  return {p:cn?1:terr?5:10, v:note,
+          veto:cn?R().tzCN(tz):null};
+}},
+
+{cat:'fp',key:'时区偏移',w:2,fn:()=>{
+  const off=-new Date().getTimezoneOffset()/60;
+  return {p:off===8?4:10, v:'UTC'+(off>=0?'+':'')+off};
+}},
+
+{cat:'fp',key:'系统语言',w:5,fn:()=>{
+  const L=navigator.languages&&navigator.languages.length?[...navigator.languages]:[navigator.language];
+  const f=(L[0]||'').toLowerCase();
+  return {p:/^zh-cn|zh-hans|^zh$/.test(f)?3:/^zh/.test(f)?6:10, v:L.join(', ')};
+}},
+
+{cat:'fp',key:'中文语言变体',w:2,fn:()=>{
+  const L=navigator.languages||[];
+  const v=L.some(l=>/zh-(tw|hk|mo)|zh-hant/i.test(l))?R().variantTC:L.some(l=>/zh-cn|zh-sg|zh-hans|^zh/i.test(l))?R().variantSC:null;
+  return {p:v?5:10, v:v||R().variantNone};
+}},
+
+{cat:'fp',key:'系统区域设置',w:4,fn:()=>{
+  const loc=Intl.DateTimeFormat().resolvedOptions().locale||'';
+  return {p:/zh-cn|zh-hans|^zh$/i.test(loc)?3:/^zh/i.test(loc)?6:10, v:loc||R().tzUnknown};
+}},
+
+{cat:'fp',key:'中文字体栈',w:4,fn:()=>{
+  const names=['NotoSansCJK','NotoSerifCJK','NotoSansSC','SourceHanSans','DroidSansFallback',
+               'MiSans','HYQiHei','FZLanTing','PingFang','Microsoft YaHei'];
+  const hit=SYSFONTS&&SYSFONTS.length?names.filter(sysHas):[];
+  const vendor=['MiSans','HarmonyOS','OPPO Sans','vivo Sans','Honor Sans','PuHuiTi'].some(sysHas);
+  let p=10;
+  if(vendor&&hit.length>=2) p=2;
+  else if(hit.length>=2) p=6;
+  else if(hit.length===1) p=7;
+  return {p, v:hit.length?R().vFonts(hit.length,hit.slice(0,4).join('、'),vendor):R().vNoFonts};
+}},
+
+{cat:'fp',key:'厂商预装字体',w:3,fn:()=>{
+  const names=['MiSans','HarmonyOS Sans','HarmonyOS','OPPO Sans','OPlus','vivo Sans','VivoFont','Honor Sans','HONORSans','PuHuiTi','FZLanTingHeiS'];
+  const v=names.filter(sysHas);
+  return {p:v.length>=2?2:v.length===1?6:10, v:v.length?v.join('、'):R().vNoVendorFonts};
+}},
+
+/* ---------- 设备完整性 ---------- */
+{cat:'dev',key:'SIM 与号码',w:5,fn:()=>{
+  const s=SIM||{};
+  const slots=s.slots||[];
+  if(!slots.length){
+    const st=s.simState||R().simUnknownState;
+    const noPerm=s.phonePermission===false;
+    if(st===R().simReady||st.indexOf('PIN')>=0||st.indexOf('PUK')>=0){
+      return {p:8, v:R().simLimited(st,noPerm)};
+    }
+    return {p:10, v:R().simNone(st)};
+  }
+  const main=slots[0]||{};
+  const cc=mccCountry(main);
+  const carrier=main.carrier||NATIVE&&NATIVE.simOperator||'';
+  const esim=!!main.esim;
+  const all=slots.map(x=>mccCountry(x)||'?');
+  const good=all.filter(x=>x!=='?'&&!['CN','HK','MO'].includes(x));
+  const badMain=['CN','HK','MO'].includes(cc);
+  const tags=[R().simTagMain(cc||'?',carrier||R().simNoCarrier,main.mcc||'?',esim)];
+  if(slots.length>1) tags.push(R().simTagDual(slots.length,all.join(' + ')));
+  if(s.line1Readable) tags.push(R().simTagLine1);
+  // 只要有一张卡属于支持地区，就存在可用于验证的实体号码
+  const p = good.length ? (badMain?6:10) : (badMain?3:10);
+  if(good.length && badMain) tags.push(R().simTagGoodSlot);
+  return {p, v:tags.join(' · ')};
+}},
+
+{cat:'dev',key:'设备型号',w:1,fn:()=>{
+  if(NATIVE&&NATIVE.brand){
+    const b=(NATIVE.brand+' '+NATIVE.manufacturer).toLowerCase();
+    const cn=['huawei','honor','xiaomi','redmi','poco','oppo','vivo','iqoo','realme','oneplus','meizu','lenovo','zte','nubia','harmony'];
+    const d=cn.find(k=>b.includes(k));
+    return {p:(d==='huawei'||d==='harmony')?2:d?5:10, v:NATIVE.manufacturer+' '+NATIVE.model+'（Android '+NATIVE.release+'）'};
+  }
+  return {p:8, v:R().noDeviceInfo};
+}},
+
+{cat:'dev',key:'Root / 框架',w:3,fn:()=>{
+  if(!INTEG) return {p:8, v:R().noSysInfo};
+  return {p:INTEG.root?3:10, v:INTEG.root?R().rootFound(INTEG.rootEvidence||R().sysAbnormal):R().rootNone};
+}},
+
+{cat:'dev',key:'模拟器检测',w:5,fn:()=>{
+  if(!INTEG) return {p:8, v:R().noSysInfo};
+  return {p:INTEG.emulator?1:10, v:INTEG.emulator?R().emuFound(INTEG.emuEvidence||R().buildAbnormal):R().emuReal,
+          veto:INTEG.emulator?R().emuVeto:null};
+}},
+
+{cat:'dev',key:'系统 ROM 状态',w:1,fn:()=>{
+  if(!INTEG) return {p:8, v:R().noSysInfo};
+  return {p:INTEG.officialRom?10:5, v:(INTEG.officialRom?R().romOfficial:R().romUnofficial(INTEG.tags,INTEG.buildType))+R().romPatch(INTEG.patch)};
+}},
+
+{cat:'dev',key:'支付环境',w:4,fn:()=>{
+  const a=APPS||{};
+  const inst=a.installer||'';
+  const gms=!!a.gms, play=!!a.play;
+  const pays=(a.payApps||[]).map(x=>String(x));
+  let p=10,label='';
+  if(inst==='com.android.vending'){ p=10; label=R().payPlay; }
+  else if(gms){ p=6; label=R().paySideload; }
+  else { p=4; label=R().payNoGms; }
+  if(pays.length) label+=R().payInstalled(pays.join('、'));
+  if(!a.found) return {p:8, v:R().noAppInfo};
+  return {p, v:label};
+}},
+
+{cat:'dev',key:'多开与分身',w:3,fn:()=>{
+  const a=APPS||{};
+  if(!a.found) return {p:8, v:R().noAppInfo2};
+  const par=(a.parallel||[]).map(x=>String(x));
+  const prof=Number(a.profiles||1);
+  const claude=a.claudeInstalled?R().claudeInstalled:'';
+  if(par.length) return {p:2, v:R().parallel(par.join('、'),claude)};
+  if(prof>1) return {p:4, v:R().profiles(prof,claude)};
+  return {p:10, v:R().cleanProfile(claude)};
+}},
+
+{cat:'dev',key:'代理隧道状态',w:1,fn:()=>{
+  if(!INTEG) return {p:8, v:R().noNetState};
+  return {p:INTEG.vpn?10:6, v:INTEG.vpn?(INTEG.vpnType||R().vpnDefault):R().vpnOff};
+}},
+
+/* ---------- 网络出口 ---------- */
+{cat:'net',key:'IP 归属地',w:20,fn:async()=>{
+  await ensureIntel();
+  if(!state.cc) return {p:5, v:R().noIP};
+  const bad=UNSUP.has(state.cc);
+  return {p:bad?0:10, v:R().ipCN(state.cc,ispLabel().slice(0,34)),
+          veto:bad?R().ipVeto(state.cc):null};
+}},
+
+{cat:'net',key:'IP 类型与纯净度',w:13,fn:async()=>{
+  if(!state.intelReady) return {p:6, v:R().intelDown};
+  const dc=state.dcVotes||0, res=state.resVotes||0, ev=state.evidence||[];
+  const tail=ev.length?('：'+ev.slice(0,3).join('；')):'';
+  if(dc>=2) return {p:1, v:R().dcVote(dc,tail)};
+  if(dc===1) return {p:3, v:R().dcOne(tail)};
+  if(res>=2) return {p:10, v:R().residential(tail)};
+  return {p:6, v:R().unsure(tail)};
+}},
+
+{cat:'net',key:'IPv6 泄露',w:6,fn:async()=>{
+  let v6=null;
+  try{v6=await fetchJSON('https://api64.ipify.org?format=json').then(d=>d&&d.ip);}catch(e){}
+  if(!v6||!v6.includes(':')||v6===state.ip) return {p:10, v:R().noV6};
+  const g=await fetchJSON('https://ipwho.is/'+v6);
+  let cc=g?(g.country_code||'').toUpperCase():'';
+  // 隐藏规则：IPv6 的 /32 段直接标明了运营商，比地理位置更硬
+  const P6=[['240e',R().opCT],['2408',R().opCU],['2409',R().opCM],
+            ['2400',R().opCN],['2401',R().opCN],['2402',R().opCN],['2403',R().opCN],
+            ['2404',R().opCN],['2405',R().opCN],['2406',R().opCN],['2407',R().opCN]];
+  const hit=P6.find(x=>v6.toLowerCase().startsWith(x[0]));
+  if(!cc && hit) cc='CN';
+  const owner=hit?R().v6Owner(hit[1]):'';
+  const leak=!!(cc&&state.cc&&cc!==state.cc);
+  return {p:leak?1:10, v:R().v6Is(cc||'?',owner,leak,state.cc||'?'),
+          veto:leak?R().rtcLeakV6((cc||'?')+owner):null};
+}},
+
+{cat:'net',key:'实时通信穿透',w:5,fn:async()=>{
+  const raw=await webrtcProbe();
+  const host=raw.filter(x=>x.endsWith('|host')).map(x=>x.split('|')[0]);
+  const ips=raw.map(x=>x.split('|')[0]);
+  if(!ips.length) return {p:9, v:R().rtcLimited};
+  const mdns=host.filter(h=>/\.local$/i.test(h)).length;
+  const localOnly=host.filter(h=>!/\.local$/i.test(h)&&isPrivate(h)).length;
+  const pub=ips.filter(i=>!isPrivate(i)&&i!==state.ip&&!/\.local$/i.test(i));
+  if(!pub.length){
+    const note=mdns?R().rtcMdns(mdns)
+      :(localOnly?R().rtcLocalOnly(localOnly):R().rtcNone);
+    return {p:10, v:note};
+  }
+  const first=pub[0];
+  let cc='';
+  if(first.includes(':')){const g=await fetchJSON('https://ipwho.is/'+first);cc=g?(g.country_code||'').toUpperCase():'';}
+  const bad=!!(cc&&state.cc&&cc!==state.cc);
+  return {p:bad?2:8, v:R().rtcPub(first,cc,bad),
+          veto:bad?R().rtcVeto(cc):null};
+}},
+
+{cat:'net',key:'时区与 IP 一致性',w:5,fn:async()=>{
+  await ensureIntel();
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  const cnTz=['Asia/Shanghai','Asia/Urumqi','Asia/Chongqing','Asia/Harbin','Asia/Kashgar'].includes(tz);
+  if(!state.cc) return {p:8, v:R().ipUnlocated};
+  if(cnTz&&UNSUP.has(state.cc)) return {p:2, v:R().bothBad};
+  if(cnTz) return {p:4, v:R().tzVsIp(state.cc)};
+  if(UNSUP.has(state.cc)) return {p:3, v:R().ipUnsup(state.cc)};
+  return {p:10, v:R().aligned};
+}},
+
+{cat:'net',key:'Claude 服务连通',w:1,fn:async()=>{
+  try{
+    const c=new AbortController(),tt=setTimeout(()=>c.abort(),7000);
+    await fetch('https://api.anthropic.com/v1/models',{signal:c.signal,mode:'no-cors'});
+    clearTimeout(tt);
+    return {p:10, v:R().apiOk};
+  }catch(e){
+    return {p:3, v:R().apiFail};
+  }
+}}
+];
+
+/* ===================== 工具 ===================== */
+const TOTAL=CHECKS.length;
+const WEIGHT_SUM=CHECKS.reduce((a,c)=>a+(c.w||10),0);
+const MAX=WEIGHT_SUM;   // 总分 = 权重之和（100）
+/* 某项实际得分 = 权重 × 得分率。低权重项即便全丢，也只影响 1 分 */
+function earnedOf(w,p){ return +(w*p/10).toFixed(2); }
+const results=[];
+
+function isPrivate(ip){return /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|127\.|fd|fe80|169\.254\.)/.test(ip);}
+function webrtcProbe(){
+  return new Promise(res=>{
+    const found=new Set();let done=false;
+    const fin=()=>{if(!done){done=true;res([...found]);}};
+    setTimeout(fin,3800);
+    try{
+      const pc=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun.cloudflare.com:3478']}]});
+      pc.createDataChannel('x');
+      pc.onicecandidate=e=>{
+        if(!e.candidate)return fin();
+        const c=e.candidate.candidate;
+        const m=/candidate:\S+ \d+ \S+ \d+ ([^\s]+) \d+ typ (\w+)/.exec(c);
+        if(m) found.add(m[1]+'|'+m[2]);
+      };
+      pc.createOffer().then(o=>pc.setLocalDescription(o));
+    }catch(e){fin();}
+  });
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const fmtNum=n=>{ const v=Math.round(n*10)/10; return Number.isInteger(v)?String(v):v.toFixed(1); };
+const lvOf=p=>p>=8?'ok':p>=5?'wa':'bd';
+const CLS={ok:'c-ok',wa:'c-wa',bd:'c-bd'};
+
+
+/* ===================== 应用语言到界面 ===================== */
+function esc(x){
+  return String(x==null?'':x).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function applyLang(){
+  const l=L();
+  const set=(id,val)=>{ const el=$(id); if(el) el.textContent=val; };
+  document.documentElement.lang = LANG;
+  document.title = l.appName;
+  set('tHomeSub',l.homeSub);
+  set('tTitle',l.appName);
+  set('btnStart',l.start);
+  set('tPrivacy',l.privacy);
+  set('tScanning',l.scanning);
+  set('tScore',l.score);
+  set('tDetail',l.detail);
+  set('tDetailTitle',l.detailTitle);
+  set('btnAgain',l.again);
+  set('tDisclaimer',l.disclaimer);
+  set('tPick',l.pick);
+  set('kGot',l.k.got);
+  set('kWhy',l.k.why);
+  set('kFix',l.k.fix);
+  set('shClose',l.ok);
+  set('kKeyTitle',l.keyTitle);
+  set('kKeyDesc',l.keyDesc);
+  set('keyInput',null);
+  const ki=$('keyInput'); if(ki) ki.placeholder=l.keyPlaceholder;
+  set('keyCancel',l.cancel);
+  set('keySave',l.save);
+  set('kLangTitle',l.langTitle);
+  set('homeMeta', l.homeMeta(TOTAL,MAX));
+  const backBtn=$('back'); if(backBtn) backBtn.textContent='‹ ';
+  renderLangOpts();
+}
+function renderLangOpts(){
+  const box=$('langOpts'); if(!box) return;
+  box.innerHTML='';
+  LANGS.forEach(code=>{
+    const b=document.createElement('button');
+    b.textContent=LANG_NAME[code];
+    if(code===LANG) b.className='on';
+    b.onclick=()=>{ setLang(code); };
+    box.appendChild(b);
+  });
+}
+function setLang(code){
+  if(!LANGS.includes(code)) return;
+  LANG=code;
+  try{ localStorage.setItem('lang',code); }catch(e){}
+  applyLang();
+  /* 结果页/明细页如果已经渲染过，就地重刷文案 */
+  if(results.length){
+    results.forEach(r=>{ const t=itemText(r.key); r.nm=t.n; r.why=t.why; r.fix=t.fix; });
+    if($('v-detail').classList.contains('on')) buildDetail();
+    if($('v-result').classList.contains('on')) showResult();
+  }
+}
+
+/* ===================== 视图 ===================== */
+function show(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===id));
+  const el=document.getElementById(id);
+  if(el) el.scrollTop=0;
+}
+$('homeMeta').textContent=L().homeMeta(TOTAL,MAX);
+
+/* ===================== 扫描 ===================== */
+let doneCount=0,totalScore=0;
+
+async function scan(){
+  results.length=0;doneCount=0;totalScore=0;
+  $('rows').innerHTML='';
+  $('scanCount').textContent='0 / '+TOTAL;
+  $('scanBar').style.width='0%';
+  $('vetoBox').innerHTML='';
+  intelPromise=loadIPIntel();   // 并行预取，节省总耗时
+  show('v-scan');
+
+  const rowsEl=$('rows');
+
+  for(let i=0;i<CHECKS.length;i++){
+    const c=CHECKS[i];
+    const t=itemText(c.key);
+    const row=document.createElement('div');
+    row.className='row new';
+    row.innerHTML='<span class="st"><span class="ring-s"></span></span>'+
+                  '<span class="nm">'+esc(t.n)+'</span><span class="vl">'+esc(L().scanning)+'</span>';
+    rowsEl.appendChild(row);
+    // 只滚动扫描容器本身，避免滚动惯性带到结果页
+    const sv=$('v-scan');
+    sv.scrollTop=sv.scrollHeight;
+
+    const t0=Date.now();
+    let r;
+    try{ r=await c.fn(); }catch(e){ console.log('[CK-ERR] '+c.nm+' :: '+e); r={p:5,v:R().err}; }
+    const wait=Math.max(0,300-(Date.now()-t0));
+    if(wait) await sleep(wait);
+
+    const lv=lvOf(r.p);
+    row.querySelector('.st').innerHTML='<span class="tick '+CLS[lv]+'">'+(lv==='ok'?'✓':lv==='wa'?'!':'✕')+'</span>';
+    const w=c.w||10, got=earnedOf(w,r.p);
+    row.querySelector('.vl').innerHTML='<b class="'+CLS[lv]+'">'+fmtNum(got)+'</b><span style="color:var(--ink3);font-size:11px">/'+w+'</span>';
+
+    console.log('[CK] '+t.n+' | '+r.p+'/10 → '+fmtNum(got)+'/'+w+' | '+r.v);
+    results.push({cat:c.cat,key:c.key,nm:t.n,p:r.p,w:w,got:got,v:r.v,why:t.why,fix:t.fix,veto:r.veto||null});
+
+    doneCount++;totalScore+=got;
+    $('scanCount').textContent=doneCount+' / '+TOTAL;
+    $('scanBar').style.width=(doneCount/TOTAL*100)+'%';
+    await sleep(90);
+  }
+  await sleep(300);
+  showResult();
+}
+
+/* ===================== 结论 ===================== */
+function showResult(){
+  const vetos=results.filter(r=>r.veto);
+  const pct=Math.round(totalScore/MAX*100);   // MAX=100，pct 即得分
+
+  let title,desc,color;
+  if(vetos.length){
+    title=L().v.stop;
+    desc=L().d.veto(vetos.length);
+    color='var(--bd)';
+  }else if(pct>=85){
+    title=L().v.ok;
+    desc=L().d.ok;
+    color='var(--ok)';
+  }else if(pct>=65){
+    title=L().v.warn;
+    desc=L().d.warn;
+    color='var(--wa)';
+  }else{
+    title=L().v.bad;
+    desc=L().d.bad;
+    color='var(--bd)';
+  }
+
+  show('v-result');
+
+  const fg=$('fg');
+  fg.style.stroke=color;
+  requestAnimationFrame(()=>{ fg.style.strokeDashoffset=String(CIRC*(1-totalScore/MAX)); });
+
+  const el=$('totalNum');
+  let n=0;const step=Math.max(0.5,Math.round(totalScore/28*10)/10);
+  const timer=setInterval(()=>{
+    n=Math.min(totalScore,n+step);
+    el.innerHTML=fmtNum(n)+'<i>/'+MAX+'</i>';
+    if(n>=totalScore) clearInterval(timer);
+  },26);
+
+  $('verdict').textContent=title;
+  $('verdict').style.color=color;
+  $('verdictSub').textContent=desc;
+
+  if(vetos.length){
+    $('vetoBox').innerHTML='<div class="veto"><div class="vt">'+esc(L().vetoTitle)+'</div>'+
+      vetos.map(v=>'<div class="vl">'+v.veto+'</div>').join('')+'</div>';
+  }
+
+  // 只有权重≥3 且得分率<80% 才算待改进；权重 1-2 的项单列，不计入
+  const low=results.filter(r=>r.p<8 && (r.w||10)>=3).length;
+  $('lowCount').textContent=low?L().pending(low):L().allPass;
+  buildDetail();
+}
+
+/* ===================== 明细 ===================== */
+const GROUP_KEY={fp:'fingerprint',dev:'device',net:'network'};
+function buildDetail(){
+  const g=$('groups');g.innerHTML='';
+  const cats=[...new Set(results.map(r=>r.cat))];
+  cats.forEach(cat=>{
+    const items=results.filter(r=>r.cat===cat).slice().sort((a,b)=>(b.w||10)-(a.w||10));
+    const sum=items.reduce((a,b)=>a+ (b.got!=null?b.got:b.p),0);
+    const max=items.reduce((a,b)=>a+(b.w||10),0);
+    const wrap=document.createElement('div');wrap.className='grp';
+    const gk=GROUP_KEY[cat]||cat;
+    wrap.innerHTML='<div class="grp-t"><span>'+esc(L().grp[gk]||gk)+'</span><b>'+fmtNum(sum)+' / '+max+'</b></div>';
+    items.forEach(it=>{
+      const lv=lvOf(it.p);
+      const d=document.createElement('div');d.className='itm';
+      d.innerHTML='<span class="nm">'+esc(it.nm)+(it.veto?'<span class="badge">'+esc(L().badgeVeto)+'</span>':'')+'</span>'+
+        '<span class="sc '+CLS[lv]+'">'+fmtNum(it.got!=null?it.got:it.p)+'<span style="color:var(--ink3);font-weight:400;font-size:11.5px">/'+(it.w||10)+'</span></span>'+
+        '<span class="ar">›</span>';
+      d.onclick=()=>openSheet(it);
+      wrap.appendChild(d);
+    });
+    g.appendChild(wrap);
+  });
+}
+function openSheet(it){
+  const lv=lvOf(it.p);
+  $('shTitle').textContent=it.nm;
+  const col=lv==='ok'?'var(--ok)':lv==='wa'?'var(--wa)':'var(--bd)';
+  const w=it.w||10;
+  $('shScore').innerHTML=esc(L().scScoreLbl)+' <b style="color:'+col+'">'+fmtNum(it.got!=null?it.got:it.p)+'</b> / '+w
+    +'　<span style="color:var(--ink3)">'+esc(L().scWeightLbl)+' '+w+'</span>'+(it.veto?'　<span class="badge">'+esc(L().badgeVeto)+'</span>':'');
+  $('shValue').textContent=it.v;
+  $('shWhy').textContent=it.why;
+  $('shFix').textContent=it.fix;
+  $('mask').classList.add('on');
+  $('sheet').classList.add('on');
+}
+function closeSheet(){
+  $('mask').classList.remove('on');
+  $('sheet').classList.remove('on');
+  const k=$('ksheet'); if(k) k.classList.remove('on');
+}
+
+/* ===================== 返回键 ===================== */
+window.appBack=function(){
+  if($('sheet').classList.contains('on')){closeSheet();return true;}
+  if($('v-detail').classList.contains('on')){show('v-result');return true;}
+  if($('v-result').classList.contains('on')){show('v-home');return true;}
+  if($('v-scan').classList.contains('on')){return true;}
+  return false;
+};
+
+/* 启动即按系统语言渲染 */
+applyLang();
+
+/* ===================== 事件 ===================== */
+$('btnStart').onclick=()=>scan();
+$('btnAgain').onclick=()=>scan();
+$('openDetail').onclick=()=>{buildDetail();show('v-detail');};
+$('back').onclick=()=>show('v-result');
+$('mask').onclick=closeSheet;
+
+/* 设置弹层 */
+$('btnKey').onclick=()=>{
+  $('keyInput').value=PC_KEY||'';
+  $('ksheet').classList.add('on');
+  $('mask').classList.add('on');
+};
+$('keyCancel').onclick=()=>{
+  $('ksheet').classList.remove('on');
+  $('mask').classList.remove('on');
+};
+$('keySave').onclick=()=>{
+  PC_KEY=($('keyInput').value||'').trim();
+  try{ if(PC_KEY) localStorage.setItem('pcKey',PC_KEY); else localStorage.removeItem('pcKey'); }catch(e){}
+  $('ksheet').classList.remove('on');
+  $('mask').classList.remove('on');
+};
+$('shClose').onclick=closeSheet;
+</script>
+</body>
+</html>
