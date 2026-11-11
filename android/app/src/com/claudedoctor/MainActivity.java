@@ -213,8 +213,32 @@ public class MainActivity extends Activity {
          * 原生 HTTP 请求：只允许白名单域名。
          * 走原生可以绕开 WebView 的跨域限制，从而使用不支持 CORS 的情报接口。
          */
+        /** 异步取数：在子线程发请求，完成后把结果回调给 JS，绝不阻塞渲染线程 */
+        @JavascriptInterface
+        public void httpGetAsync(final String url, final String cbId) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    final String body = doHttpGet(url);
+                    final String js = "window.__nativeHttp&&window.__nativeHttp("
+                            + JSONObject.quote(cbId) + "," + JSONObject.quote(body) + ")";
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try { web.evaluateJavascript(js, null); } catch (Throwable ignored) { }
+                        }
+                    });
+                }
+            }).start();
+        }
+
+        /** 同步版本，保留给必须同步的场景；JS 侧默认走 async */
         @JavascriptInterface
         public String httpGet(String url) {
+            return doHttpGet(url);
+        }
+
+        private String doHttpGet(String url) {
             final String[] hosts = {"ip-api.com", "ipwho.is", "proxycheck.io",
                     "api.iplocation.net", "api64.ipify.org", "ipapi.co"};
             try {
@@ -227,7 +251,6 @@ public class MainActivity extends Activity {
                     }
                 }
                 if (!allowed) return "";
-
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.toURL().openConnection();
                 c.setConnectTimeout(6000);
                 c.setReadTimeout(6000);

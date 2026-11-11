@@ -24,10 +24,25 @@ body{background:var(--bg);color:var(--ink);
 .view.on{opacity:1;pointer-events:auto;transform:none}
 
 #v-home{justify-content:center;align-items:center;text-align:center}
-.brand{font-size:13px;letter-spacing:.18em;color:var(--ink3);margin-bottom:26px}
-.home-title{font-size:29px;font-weight:700;letter-spacing:-.4px}
-.home-sub{font-size:14px;color:var(--ink2);margin-top:12px;line-height:1.7}
-.home-meta{font-size:12.5px;color:var(--ink3);margin-top:6px}
+.hero{display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
+.hero-word{
+  font-family:"Times New Roman",Georgia,"Songti SC",serif;
+  font-size:64px;font-weight:600;letter-spacing:-2px;line-height:1;
+  color:var(--ink);opacity:0;transform:translateY(14px) scale(.96);
+  animation:heroIn .85s cubic-bezier(.2,.9,.25,1) .05s forwards;
+}
+.hero-line{
+  width:0;height:2px;background:var(--accent);border-radius:2px;margin:16px 0 14px;
+  animation:lineIn .7s cubic-bezier(.2,.9,.25,1) .5s forwards;
+}
+@keyframes heroIn{to{opacity:1;transform:none}}
+@keyframes lineIn{to{width:52px}}
+.home-title{
+  font-size:15px;font-weight:600;letter-spacing:.16em;color:var(--ink2);
+  opacity:0;animation:fadeUp .6s ease .65s forwards;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.home-meta{font-size:12.5px;color:var(--ink3);margin-top:8px;opacity:0;animation:fadeUp .6s ease .75s forwards}
 .gear{position:absolute;top:34px;right:4px;width:40px;height:40px;z-index:5;
   border:none;background:transparent;color:var(--ink3);font-size:17px}
 .ksheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card);
@@ -51,12 +66,29 @@ body{background:var(--bg);color:var(--ink);
 .lang-opts button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .start{margin-top:44px;width:100%;max-width:280px;padding:17px;border:none;border-radius:99px;
   background:var(--accent);color:#fff;font-size:16px;font-weight:600;letter-spacing:.5px;
-  box-shadow:0 10px 26px rgba(217,119,87,.28);transition:transform .15s}
-.start:active{transform:scale(.97)}
+  box-shadow:0 10px 26px rgba(217,119,87,.28);
+  opacity:0;
+  transition:transform .18s cubic-bezier(.2,.9,.25,1),box-shadow .25s,background .2s;
+  animation:fadeUp .6s ease .85s forwards}
+.start:active{transform:scale(.96);box-shadow:0 4px 12px rgba(217,119,87,.22)}
+.start.press{transform:scale(.94);background:#cd6a4c;box-shadow:0 3px 10px rgba(217,119,87,.2)}
+.home-foot{opacity:0;animation:fadeUp .6s ease 1s forwards}
+/* 尊重系统的"减少动态效果"设置，同时让截图与低性能设备直接显示 */
+@media (prefers-reduced-motion: reduce){
+  .hero-word,.home-title,.home-meta,.start,.home-foot{opacity:1!important;transform:none!important;animation:none!important}
+  .hero-line{animation:none!important;width:52px!important}
+  .view{transition:none!important}
+  .row.new{animation:none!important}
+}
+
 .home-foot{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 18px);left:0;right:0;text-align:center;
   font-size:11px;color:var(--ink3);line-height:1.7}
 
 #v-scan{padding-top:calc(env(safe-area-inset-top) + 18px)}
+/* 标题与进度条吸顶，滚动时始终可见 */
+#v-scan .scan-top{position:sticky;top:0;z-index:3;background:var(--bg);
+  padding-top:6px;margin-top:-6px}
+#v-scan .bar{position:sticky;top:38px;z-index:3;background:var(--bg);padding:6px 0 8px;margin-bottom:12px}
 .scan-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
 .scan-top h2{font-size:20px;font-weight:700}
 .scan-top b{font-size:13px;color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums}
@@ -143,10 +175,12 @@ body{background:var(--bg);color:var(--ink);
 <div id="app">
 
   <section class="view on" id="v-home">
-    <div class="brand">CLAUDE</div>
-    <div class="home-title" id="tTitle">环境检测</div>
-    <div class="home-sub" id="tHomeSub">检查这台手机是否适合使用 Claude</div>
-    <div class="home-meta" id="homeMeta">共 19 项信号 · 逐项打分</div>
+    <div class="hero">
+      <div class="hero-word">Claude</div>
+      <div class="hero-line"></div>
+      <div class="home-title" id="tTitle">环境检测工具</div>
+    </div>
+    <div class="home-meta" id="homeMeta"></div>
     <button class="start" id="btnStart">开始检测</button>
     <button class="gear" id="btnKey" aria-label="设置">⚙</button>
     <div class="home-foot" id="tPrivacy">仅本机计算，不上传任何数据</div>
@@ -215,6 +249,8 @@ body{background:var(--bg);color:var(--ink);
 
 <script>
 const $=id=>document.getElementById(id);
+window.onerror=function(m,src,l,c,e){ console.log('[JS-ERR] '+m+' @line '+l+' '+(e&&e.stack?e.stack:'')); };
+window.addEventListener('unhandledrejection',function(ev){ console.log('[JS-REJ] '+(ev.reason&&ev.reason.message||ev.reason)); });
 const CIRC=552.9; // 2πr, r=88
 
 /* ===================== 原生读取 ===================== */
@@ -271,7 +307,7 @@ let LANG = detectLang();
 
 const I18N = {
 'zh-CN':{
-  appName:'环境检测',
+  appName:'Claude 环境检测工具',
   homeSub:'检查这台手机是否适合使用 Claude',
   homeMeta:(n,m)=>`共 ${n} 项信号 · 按权重计分（总分 ${m}）`,
   start:'开始检测',
@@ -296,6 +332,7 @@ const I18N = {
   langTitle:'语言',
   pending:(n)=>`${n} 项待改进`, allPass:'全部达标',
   scScoreLbl:'得分', scWeightLbl:'权重',
+  homeTitle:'环境检测工具',
   v:{ok:'可以放心使用',warn:'有一定风险',bad:'不建议使用',stop:'请不要使用'},
   d:{
     veto:(n)=>`有 ${n} 项是硬性不过关。不是扣几分的事：只要踩中一条，注册和使用都会被判成不支持地区，充了钱也白搭。`,
@@ -453,7 +490,7 @@ const I18N = {
   }
 },
 'zh-TW':{
-  appName:'環境檢測',
+  appName:'Claude 環境檢測工具',
   homeSub:'檢查這台手機是否適合使用 Claude',
   homeMeta:(n,m)=>`共 ${n} 項訊號 · 依權重計分（總分 ${m}）`,
   start:'開始檢測',
@@ -478,6 +515,7 @@ const I18N = {
   langTitle:'語言',
   pending:(n)=>`${n} 項待改進`, allPass:'全部達標',
   scScoreLbl:'得分', scWeightLbl:'權重',
+  homeTitle:'環境檢測工具',
   v:{ok:'可以放心使用',warn:'有一定風險',bad:'不建議使用',stop:'請不要使用'},
   d:{
     veto:(n)=>`有 ${n} 項是硬性不過關。不是扣幾分的事：只要踩中一條，註冊和使用都會被判成不支援地區，儲值了也白費。`,
@@ -548,7 +586,7 @@ const I18N = {
   }
 },
 'en':{
-  appName:'Environment Check',
+  appName:'Claude Environment Checker',
   homeSub:'Check whether this phone is safe for Claude',
   homeMeta:(n,m)=>`${n} signals · weighted score (max ${m})`,
   start:'Start check',
@@ -573,6 +611,7 @@ const I18N = {
   langTitle:'Language',
   pending:(n)=>`${n} to improve`, allPass:'All good',
   scScoreLbl:'Score', scWeightLbl:'weight',
+  homeTitle:'Environment Checker',
   v:{ok:'Safe to use',warn:'Some risk',bad:'Not recommended',stop:'Do not use'},
   d:{
     veto:(n)=>`${n} blocking issue(s). This is not about losing points — any single one of them marks the account as coming from an unsupported region. Signing up or paying will not help.`,
@@ -686,7 +725,7 @@ const I18N = {
   }
 },
 'ja':{
-  appName:'環境チェック',
+  appName:'Claude 環境チェッカー',
   homeSub:'この端末が Claude に適しているか確認します',
   homeMeta:(n,m)=>`全 ${n} 項目 · 重み付き採点（満点 ${m}）`,
   start:'チェック開始',
@@ -711,6 +750,7 @@ const I18N = {
   langTitle:'言語',
   pending:(n)=>`${n} 項目に改善点`, allPass:'すべて良好',
   scScoreLbl:'得点', scWeightLbl:'重み',
+  homeTitle:'環境チェッカー',
   v:{ok:'安心して使えます',warn:'やや危険',bad:'おすすめしません',stop:'使用しないでください'},
   d:{
     veto:(n)=>`${n} 件が致命的です。点数の問題ではありません。1 つでも該当すると、非対応地域からの利用と判定され、登録も支払いも無駄になります。`,
@@ -868,16 +908,30 @@ const HOME_KW=['telecom','unicom','mobile','broadband','fiber','fibre','cable','
 'at&t','charter','cox','centurylink','frontier','windstream','virgin','optimum','residential','home',
 'chinanet','cnc','cmcc','telefonica','orange','swisscom','kddi','ntt','singtel','starhub'];
 
+/* 原生 HTTP 回调登记表：Java 在子线程取完数据后回调这里 */
+const httpWaiters={}; let httpSeq=0;
+window.__nativeHttp=function(id, body){
+  const cb=httpWaiters[id];
+  if(cb){ delete httpWaiters[id]; cb(body||''); }
+};
+/* 走原生异步通道，避免阻塞渲染线程（同步调用会让点击后卡住好几秒） */
+function nativeGet(url){
+  return new Promise(resolve=>{
+    if(!(window.Native && window.Native.httpGetAsync)) return resolve(null);
+    const id='h'+(++httpSeq);
+    httpWaiters[id]=resolve;
+    try{ window.Native.httpGetAsync(url, id); }
+    catch(e){ delete httpWaiters[id]; return resolve(null); }
+    setTimeout(()=>{ if(httpWaiters[id]){ delete httpWaiters[id]; resolve(''); } }, 9000);
+  });
+}
 /* 原生优先的 HTTP：原生层不受跨域限制，可用不支持 CORS 的情报接口 */
-function netGet(url){
-  try{
-    if(window.Native && window.Native.httpGet){
-      const body=window.Native.httpGet(url);
-      console.log('[NET] '+url.slice(8,42)+' len='+(body?body.length:0));
-      if(body) return Promise.resolve(JSON.parse(body));
-    }
-  }catch(e){}
-  return fetchJSON(url);
+async function netGet(url){
+  const body=await nativeGet(url);
+  if(body===null) return fetchJSON(url);   // 网页版没有原生桥，退回 fetch
+  console.log('[NET] '+url.slice(8,42)+' len='+(body?body.length:0));
+  if(!body) return null;
+  try{ return JSON.parse(body); }catch(e){ return null; }
 }
 
 /* 每次检测前重置，避免沿用上一次的结论 */
@@ -1248,6 +1302,16 @@ function webrtcProbe(){
   });
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* 等一帧渲染完成，用来让动画先上屏再干重活。
+   WebView 里 rAF 偶发不触发，必须带超时兜底，否则整个流程会卡住 */
+const nextFrame=(ms)=>{
+  return new Promise(r=>{
+    let done=false;
+    const fin=()=>{ if(!done){ done=true; r(); } };
+    try{ requestAnimationFrame(()=>requestAnimationFrame(fin)); }catch(e){}
+    setTimeout(fin, ms||120);
+  });
+};
 const fmtNum=n=>{ const v=Math.round(n*10)/10; return Number.isInteger(v)?String(v):v.toFixed(1); };
 const lvOf=p=>p>=8?'ok':p>=5?'wa':'bd';
 const CLS={ok:'c-ok',wa:'c-wa',bd:'c-bd'};
@@ -1262,8 +1326,7 @@ function applyLang(){
   const set=(id,val)=>{ const el=$(id); if(el) el.textContent=val; };
   document.documentElement.lang = LANG;
   document.title = l.appName;
-  set('tHomeSub',l.homeSub);
-  set('tTitle',l.appName);
+  set('tTitle',l.homeTitle);
   set('btnStart',l.start);
   set('tPrivacy',l.privacy);
   set('tScanning',l.scanning);
@@ -1329,22 +1392,45 @@ async function scan(){
   $('scanCount').textContent='0 / '+TOTAL;
   $('scanBar').style.width='0%';
   $('vetoBox').innerHTML='';
-  intelPromise=loadIPIntel();   // 并行预取，节省总耗时
+
+  // 先把空页面画出来，视觉上零延迟
   show('v-scan');
+  await nextFrame();
 
   const rowsEl=$('rows');
+
+  // 预先把所有行骨架铺好，动画从头就顺
+  const rowRefs=[];
+  try{
+  CHECKS.forEach(c=>{
+    const t=itemText(c.key);
+    const row=document.createElement('div');
+    row.className='row';
+    row.innerHTML='<span class="st"><span class="ring-s"></span></span>'+
+                  '<span class="nm">'+esc(t.n)+'</span><span class="vl">'+esc(L().scanning)+'</span>';
+    rowsEl.appendChild(row);
+    rowRefs.push(row);
+  });
+  }catch(err){ console.log('[SKEL-ERR] '+err); }
+  console.log('[SKEL] rows='+rowRefs.length+' lang='+LANG);
+
+  // 网络预取放在骨架绘制之后，避免阻塞首帧
+  intelPromise=loadIPIntel();
+  await nextFrame();
 
   for(let i=0;i<CHECKS.length;i++){
     const c=CHECKS[i];
     const t=itemText(c.key);
-    const row=document.createElement('div');
-    row.className='row new';
-    row.innerHTML='<span class="st"><span class="ring-s"></span></span>'+
-                  '<span class="nm">'+esc(t.n)+'</span><span class="vl">'+esc(L().scanning)+'</span>';
-    rowsEl.appendChild(row);
-    // 只滚动扫描容器本身，避免滚动惯性带到结果页
+    const row=rowRefs[i];
+    row.classList.add('new');
+    // 逐行显现：让整页有节奏地铺开，而不是一瞬间全亮
+    row.style.animationDelay='0ms';
+    // 只在当前行即将离开视口时才滚动，避免一上来就滚到底
     const sv=$('v-scan');
-    sv.scrollTop=sv.scrollHeight;
+    const rb=row.getBoundingClientRect(), sb=sv.getBoundingClientRect();
+    if(rb.bottom > sb.bottom - 8){
+      sv.scrollTop += Math.min(rb.bottom - sb.bottom + 24, 90);
+    }
 
     const t0=Date.now();
     let r;
@@ -1478,8 +1564,17 @@ window.appBack=function(){
 applyLang();
 
 /* ===================== 事件 ===================== */
-$('btnStart').onclick=()=>scan();
-$('btnAgain').onclick=()=>scan();
+function startWithFeedback(btn){
+  if(btn.dataset.busy) return;
+  btn.dataset.busy='1';
+  btn.classList.add('press');
+  setTimeout(()=>{
+    btn.classList.remove('press');
+    scan().finally(()=>{ delete btn.dataset.busy; });
+  },140);
+}
+$('btnStart').onclick=()=>startWithFeedback($('btnStart'));
+$('btnAgain').onclick=()=>startWithFeedback($('btnAgain'));
 $('openDetail').onclick=()=>{buildDetail();show('v-detail');};
 $('back').onclick=()=>show('v-result');
 $('mask').onclick=closeSheet;

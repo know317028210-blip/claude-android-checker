@@ -32,7 +32,7 @@
     </queries>
 
     <application
-        android:label="环境检测"
+        android:label="Claude 环境检测工具"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false"
