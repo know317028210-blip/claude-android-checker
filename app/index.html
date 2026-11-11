@@ -265,6 +265,17 @@ try{
   }
 }catch(e){}
 /* MCC 国家码 → 国家代码（运营商侧硬数据） */
+
+/* 常见国家/地区的中英文名，SIM 卡国家展示用 */
+const CC_NAME={
+ CN:'中国',HK:'中国香港',MO:'中国澳门',TW:'中国台湾',US:'美国',GB:'英国',JP:'日本',KR:'韩国',
+ SG:'新加坡',MY:'马来西亚',TH:'泰国',VN:'越南',PH:'菲律宾',ID:'印度尼西亚',IN:'印度',
+ AU:'澳大利亚',NZ:'新西兰',CA:'加拿大',DE:'德国',FR:'法国',IT:'意大利',ES:'西班牙',
+ NL:'荷兰',BE:'比利时',CH:'瑞士',AT:'奥地利',SE:'瑞典',NO:'挪威',DK:'丹麦',FI:'芬兰',
+ PL:'波兰',CZ:'捷克',PT:'葡萄牙',IE:'爱尔兰',GR:'希腊',RU:'俄罗斯',UA:'乌克兰',TR:'土耳其',
+ IL:'以色列',AE:'阿联酋',SA:'沙特',EG:'埃及',ZA:'南非',BR:'巴西',AR:'阿根廷',CL:'智利',
+ MX:'墨西哥',CO:'哥伦比亚'
+};
 const MCC_CC={ '460':'CN','461':'CN','454':'HK','455':'MO','466':'TW','310':'US','311':'US','312':'US',
 '313':'US','314':'US','315':'US','316':'US','330':'PR','234':'GB','235':'GB','262':'DE','208':'FR',
 '214':'ES','222':'IT','240':'SE','242':'NO','244':'FI','238':'DK','204':'NL','206':'BE','228':'CH',
@@ -311,8 +322,9 @@ const LANG_NAME = {'zh-CN':'简体中文','zh-TW':'繁體中文','en':'English',
 /* 当前语言：URL 参数 ?lang=xx 优先，其次系统语言 */
 function detectLang(){
   try{
+    /* URL 参数优先级最高（用于分享指定语言），其次用户上次的选择，最后跟随系统 */
     const q=new URLSearchParams(location.search).get('lang');
-    if(q&&LANGS.includes(q)) return q;
+    if(q&&LANGS.includes(q)){ try{ localStorage.setItem('lang',q); }catch(e){} return q; }
     const saved=localStorage.getItem('lang');
     if(saved&&LANGS.includes(saved)) return saved;
     const nav=(navigator.languages&&navigator.languages[0])||navigator.language||'';
@@ -385,11 +397,19 @@ const I18N = {
   },
   /* 结果值文案 */
   r:{
+    simLimited:(noPerm)=>`读到了 SIM 卡，但卡信息被系统限制${noPerm?'（未授予电话权限）':''}`,
+    simNone:'没有插 SIM 卡',
+    simLimited:(noPerm)=>`讀到了 SIM 卡，但卡資訊被系統限制${noPerm?'（未授予電話權限）':''}`,
+    simNone:'沒有插 SIM 卡',
+    simSlot:(n)=>`卡${n}`,
+    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simEsim:'eSIM',
+    simInactive:'无服务',
+    simTail:(t)=>`尾号 ${t}`,
+    simGoodCard:'另有一张支持地区的卡',
     tzCN:(tz)=>`系统时区为中国时区（${tz}），与官方支持地区直接冲突`,
     tzNote:(tz,ip,m)=>`${tz}（IP 时区 ${ip}${m?'，不一致':'，一致'}）`,
     tzUnknown:'未识别',
-    simLimited:(st,noPerm)=>`检测到 SIM 卡（${st}），但明细读取受限${noPerm?'：未授予电话权限':'：系统未返回卡信息'}`,
-    simNone:(st)=>`没插 SIM 卡（${st}），纯 WiFi 环境，读不到运营商信息`,
     noDeviceInfo:'未读取到设备信息',
     noSysInfo:'未读取到系统信息',
     noAppInfo:'未读取到应用安装信息',
@@ -422,16 +442,8 @@ const I18N = {
     ipVeto:(cc)=>`出口 IP 位于官方不支持地区（${cc}），账号创建与使用都不被允许`,
     variantSC:'简体中文', variantTC:'繁体中文', variantNone:'无中文变体',
     vFonts:(n,list,v)=>`本机字体表检出 ${n} 个中文字体：${list}${v?'，含厂商字体':''}`,
-    simCard:(slot,cc,mcc,mnc,e,bad)=>`卡${slot+1}：${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · 实体卡'}${bad?`（系统报 ${bad}，与 MCC 不符，以 MCC 为准）`:''}`,
     vNoFonts:'本机字体表未检出中文字体',
     vNoVendorFonts:'未检出厂商字体',
-    simUnknownState:'状态未知',
-    simReady:'已就绪',
-    simNoCarrier:'未知运营商',
-    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'实体卡'}`,
-    simTagDual:(n,a)=>`共 ${n} 张卡：${a}`,
-    simTagLine1:'本机号码可读',
-    simTagGoodSlot:'卡2 为支持地区号码，可用于验证',
     rootNone:'未发现 Root 痕迹',
     rootFound:(e)=>`发现 Root 痕迹：${e}`,
     sysAbnormal:'系统分区异常',
@@ -525,11 +537,15 @@ const I18N = {
     'Claude 服务连通':{n:'Claude 服務連通',why:'連不上說明代理規則漏了 anthropic 的網域。常見的情況是瀏覽器能用、命令列報 403，因為兩邊走的不是一個出口。',fix:'檢查分流規則，把 anthropic.com、claude.ai、claudeusercontent.com 都放進去。'}
   },
   r:{
+    simSlot:(n)=>`卡${n}`,
+    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simEsim:'eSIM',
+    simInactive:'無服務',
+    simTail:(t)=>`尾號 ${t}`,
+    simGoodCard:'另有一張支援地區的卡',
     tzCN:(tz)=>`系統時區為中國時區（${tz}），與官方支持地區直接衝突`,
     tzNote:(tz,ip,m)=>`${tz}（IP 時區 ${ip}${m?'，不一致':'，一致'}）`,
     tzUnknown:'未识别',
-    simLimited:(st,noPerm)=>`檢測到 SIM 卡（${st}），但明细讀取受限${noPerm?'：未授予电话權限':'：系統未返回卡信息'}`,
-    simNone:(st)=>`没插 SIM 卡（${st}），纯 WiFi 环境，讀不到運營商信息`,
     noDeviceInfo:'未讀取到設備信息',
     noSysInfo:'未讀取到系統信息',
     noAppInfo:'未讀取到應用安裝信息',
@@ -562,16 +578,8 @@ const I18N = {
     ipVeto:(cc)=>`出口 IP 位于官方不支持地區（${cc}），账號创建與使用都不被允许`,
     variantSC:'簡體中文', variantTC:'繁體中文', variantNone:'無中文变體',
     vFonts:(n,list,v)=>`本機字體表檢出 ${n} 個中文字體：${list}${v?'，含厂商字體':''}`,
-    simCard:(slot,cc,mcc,mnc,e,bad)=>`卡${slot+1}：${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · 實體卡'}${bad?`（系統報 ${bad}，與 MCC 不符，以 MCC 為準）`:''}`,
     vNoFonts:'本機字體表未檢出中文字體',
     vNoVendorFonts:'未檢出厂商字體',
-    simUnknownState:'狀態未知',
-    simReady:'已就绪',
-    simNoCarrier:'未知運營商',
-    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'實體卡'}`,
-    simTagDual:(n,a)=>`共 ${n} 张卡：${a}`,
-    simTagLine1:'本機號碼可讀',
-    simTagGoodSlot:'卡2 為支持地區號碼，可用于验證',
     rootNone:'未發現 Root 痕迹',
     rootFound:(e)=>`發現 Root 痕迹：${e}`,
     sysAbnormal:'系統分區異常',
@@ -665,11 +673,17 @@ const I18N = {
     'Claude 服务连通':{n:'Claude reachability',why:'Failing to connect means the proxy rules miss an anthropic domain. The usual symptom is a working browser but a 403 from the command line, because the two use different exits.',fix:'Check your routing rules and include anthropic.com, claude.ai and claudeusercontent.com.'}
   },
   r:{
+    simLimited:(noPerm)=>`SIM present but card details are restricted${noPerm?' (phone permission not granted)':''}`,
+    simNone:'No SIM card',
+    simSlot:(n)=>`SIM ${n}`,
+    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simEsim:'eSIM',
+    simInactive:'no service',
+    simTail:(t)=>`ending ${t}`,
+    simGoodCard:'another card from a supported region',
     tzCN:(tz)=>`System timezone is a China timezone (${tz}), directly conflicting with supported regions`,
     tzNote:(tz,ip,m)=>`${tz} (IP timezone ${ip}, ${m?'mismatch':'match'})`,
     tzUnknown:'unknown',
-    simLimited:(st,noPerm)=>`SIM present (${st}) but details are restricted${noPerm?': phone permission not granted':': system returned no card info'}`,
-    simNone:(st)=>`No SIM card (${st}) — Wi-Fi only, no carrier info readable`,
     noDeviceInfo:'Device info unreadable',
     noSysInfo:'System info unreadable',
     noAppInfo:'Install info unreadable',
@@ -702,16 +716,8 @@ const I18N = {
     ipVeto:(cc)=>`Exit IP is in an unsupported region (${cc}); account creation and use are not allowed`,
     variantSC:'Simplified Chinese', variantTC:'Traditional Chinese', variantNone:'no Chinese variant',
     vFonts:(n,list,v)=>`${n} CJK fonts in the system table: ${list}${v?', including vendor fonts':''}`,
-    simCard:(slot,cc,mcc,mnc,e,bad)=>`SIM ${slot+1}: ${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · physical'}${bad?` (system reports ${bad}, conflicts with MCC — MCC wins)`:''}`,
     vNoFonts:'No CJK fonts found in the system table',
     vNoVendorFonts:'No vendor fonts found',
-    simUnknownState:'unknown state',
-    simReady:'ready',
-    simNoCarrier:'unknown carrier',
-    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'physical'}`,
-    simTagDual:(n,a)=>`${n} cards: ${a}`,
-    simTagLine1:'own number readable',
-    simTagGoodSlot:'slot 2 is a supported-region number usable for verification',
     rootNone:'No root traces',
     rootFound:(e)=>`Root traces found: ${e}`,
     sysAbnormal:'system partition anomaly',
@@ -805,11 +811,17 @@ const I18N = {
     'Claude 服务连通':{n:'Claude への到達性',why:'接続できないのはプロキシ設定が anthropic のドメインを漏らしているためです。ブラウザは動くのにコマンドラインで 403 になるのは、出口が異なるためです。',fix:'分流ルールを確認し、anthropic.com、claude.ai、claudeusercontent.com を対象に含めてください。'}
   },
   r:{
+    simLimited:(noPerm)=>`SIM はありますが、カード情報が制限されています${noPerm?'（電話権限が未許可）':''}`,
+    simNone:'SIM カードがありません',
+    simSlot:(n)=>`カード${n}`,
+    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simEsim:'eSIM',
+    simInactive:'圏外',
+    simTail:(t)=>`下4桁 ${t}`,
+    simGoodCard:'対応地域のカードがもう 1 枚',
     tzCN:(tz)=>`システムタイムゾーンが中国時間（${tz}）で、対応地域と直接矛盾します`,
     tzNote:(tz,ip,m)=>`${tz}（IP のタイムゾーン ${ip}、${m?'不一致':'一致'}）`,
     tzUnknown:'不明',
-    simLimited:(st,noPerm)=>`SIM を検出（${st}）しましたが詳細は制限されています${noPerm?'：電話権限が未許可':': システムがカード情報を返しません'}`,
-    simNone:(st)=>`SIM なし（${st}）— Wi-Fi のみ、回線情報は読めません`,
     noDeviceInfo:'端末情報を取得できません',
     noSysInfo:'システム情報を取得できません',
     noAppInfo:'インストール情報を取得できません',
@@ -842,16 +854,8 @@ const I18N = {
     ipVeto:(cc)=>`出口 IP が非対応地域（${cc}）にあり、アカウント作成も利用も許可されません`,
     variantSC:'簡体字中国語', variantTC:'繁体字中国語', variantNone:'中国語の変種なし',
     vFonts:(n,list,v)=>`システムフォント表に中国語フォント ${n} 個：${list}${v?'（メーカー製を含む）':''}`,
-    simCard:(slot,cc,mcc,mnc,e,bad)=>`カード${slot+1}：${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · 物理カード'}${bad?`（システムは ${bad} と報告、MCC と矛盾、MCC を優先）`:''}`,
     vNoFonts:'システムフォント表に中国語フォントなし',
     vNoVendorFonts:'メーカー製フォントなし',
-    simUnknownState:'状態不明',
-    simReady:'準備完了',
-    simNoCarrier:'不明な事業者',
-    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'物理カード'}`,
-    simTagDual:(n,a)=>`${n} 枚のカード：${a}`,
-    simTagLine1:'自局番号が読み取り可能',
-    simTagGoodSlot:'スロット 2 は対応地域の番号で、認証に使えます',
     rootNone:'Root の痕跡なし',
     rootFound:(e)=>`Root の痕跡：${e}`,
     sysAbnormal:'システムパーティションの異常',
@@ -1138,40 +1142,60 @@ const CHECKS=[
   const s=SIM||{};
   const slots=s.slots||[];
   if(!slots.length){
-    const st=s.simState||R().simUnknownState;
+    const st=s.simState||'';
     const noPerm=s.phonePermission===false;
-    if(st===R().simReady||st.indexOf('PIN')>=0||st.indexOf('PUK')>=0){
-      return {p:8, v:R().simLimited(st,noPerm)};
+    /* 明确无卡：状态是 ABSENT / NOT_READY / UNKNOWN 或为空 */
+    const absent=/ABSENT|NOT_READY|UNKNOWN/i.test(st)||!st;
+    if(!absent&&(st.indexOf('READY')>=0||st.indexOf('PIN')>=0||st.indexOf('PUK')>=0)){
+      return {p:8, v:R().simLimited(noPerm)};   // 有卡但读不到明细
     }
-    return {p:10, v:R().simNone(st)};
+    return {p:10, v:R().simNone};
   }
-  /* 逐卡列出：卡槽、MCC/MNC、真实归属国。
-     carrierName 在无服务时会返回"无服务"，不能当运营商用，只用 MCC 推国家。 */
+
+  /* 逐卡读取。原则：有什么显示什么，不套模板、不显示内部诊断。
+     - 国家取 MCC（SIM 出厂写入的硬数据），MCC 缺失时才用 ISO 兜底
+     - 运营商名优先 displayName（来自运营商配置库），carrierName 在无服务时会返回"无服务"
+     - 号码：读到就显示后四位，读不到就不提这一项
+     - 无信号的卡标注"无服务"，这属于用户能理解的正常状态 */
   const cards=slots.map(x=>{
-    const c=mccCountry(x)||'?';
-    return {slot:(x.slot!=null?x.slot:'?'), cc:c, mcc:String(x.mcc||'?'), mnc:String(x.mnc||'?'),
-            esim:!!x.esim, iso:String(x.country||'').toUpperCase(), conflict:isoConflict(x),
-            name:String(x.carrier||'')};
+    const mcc=String(x.mcc||'').trim();
+    const cc=mccCountry(x)||'';
+    const nm=String(x.displayName||'').trim();
+    const carRaw=String(x.carrier||'').trim();
+    const car=(nm&&nm!=='无服务'&&nm!=='No service')?nm
+             :(carRaw&&carRaw!=='无服务'&&carRaw!=='No service')?carRaw:'';
+    const num=String(x.number||'').trim();
+    /* 是否在服务：优先用原生上报的 service 字段，缺失时才看有没有运营商名 */
+    const active=(x.service!==undefined)?!!x.service:!!car;
+    return {slot:(x.slot!=null?x.slot:0), cc, mcc, mnc:String(x.mnc||''),
+            esim:!!x.esim, active, carrier:car, num,
+            tail:(num.length>=4?num.slice(-4):'')};
   });
-  const countries=cards.map(c=>c.cc);
-  const good=countries.filter(c=>c!=='?'&&!['CN','HK','MO'].includes(c));
-  const badMain=['CN','HK','MO'].includes(cards[0].cc);
 
-  const tags=[];
-  cards.forEach(c=>{
-    tags.push(R().simCard(c.slot,c.cc,c.mcc,c.mnc,c.esim,c.conflict?c.iso:''));
-  });
-  if(s.line1Readable) tags.push(R().simTagLine1);
-  if(good.length && badMain) tags.push(R().simTagGoodSlot);
+  /* 支持地区判断只看 MCC 推出的国家 */
+  const bad=cc=>!!cc&&['CN','HK','MO'].includes(cc);
+  const usable=cards.filter(c=>c.cc&&!bad(c.cc));
+  const mainBad=cards.length?bad(cards[0].cc):false;
 
-  const p = good.length ? (badMain?6:10) : (badMain?3:10);
   const build=()=>{
-    const t=[];
-    cards.forEach(c=>{ t.push(R().simCard(c.slot,c.cc,c.mcc,c.mnc,c.esim,c.conflict?c.iso:'')); });
-    if(s.line1Readable) t.push(R().simTagLine1);
-    if(good.length && badMain) t.push(R().simTagGoodSlot);
-    return t.join(' · ');
+    const out=[];
+    cards.forEach(c=>{
+      const seg=[];
+      /* 卡号只在多卡时出现，单卡不必强调"卡1" */
+      if(cards.length>1) seg.push(R().simSlot(c.slot+1));
+      if(c.cc) seg.push(R().simCountry(c.cc));
+      if(c.carrier) seg.push(c.carrier);
+      if(c.esim) seg.push(R().simEsim);
+      if(!c.active) seg.push(R().simInactive);
+      if(c.tail) seg.push(R().simTail(c.tail));
+      out.push(seg.join(' · '));
+    });
+    /* 只有存在"可用地区卡 + 主卡不可用"时才补一句，其余情况不加废话 */
+    if(usable.length&&mainBad) out.push(R().simGoodCard);
+    return out.join('　/　');
   };
+
+  const p = usable.length ? (mainBad?6:10) : (mainBad?3:10);
   return {p, v:build(), recalc:build};
 }},
 

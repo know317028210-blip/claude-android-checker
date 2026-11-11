@@ -98,6 +98,11 @@ public class MainActivity extends Activity {
                             String car = si.getCarrierName() == null ? "" : si.getCarrierName().toString();
                             s.put("carrier", car);
                             s.put("displayName", disp);
+                            // 该卡当前是否有服务：无服务时系统把 carrierName 置为"无服务"或空
+                            boolean svc = car.length() > 0
+                                    && !car.contains("无服务") && !car.toLowerCase().contains("no service")
+                                    && !car.contains("僅限緊急") && !car.toLowerCase().contains("emergency");
+                            s.put("service", svc);
                             // 号码：部分运营商把号码写入 SIM 卡，可直接读
                             String num = "";
                             try { num = si.getNumber() == null ? "" : si.getNumber(); } catch (Throwable ignored) { }
