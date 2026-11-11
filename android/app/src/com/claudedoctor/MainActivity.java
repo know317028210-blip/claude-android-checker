@@ -91,7 +91,17 @@ public class MainActivity extends Activity {
                             s.put("mcc", mcc);
                             s.put("mnc", mnc);
                             s.put("country", safe(si.getCountryIso()).toUpperCase());
-                            s.put("carrier", si.getCarrierName() == null ? "" : si.getCarrierName().toString());
+                            // getCarrierName() 在无服务时会返回"无服务"，不可当运营商名。
+                            // displayName 来自运营商配置库，更稳定；两者都带上便于交叉核对。
+                            String disp = "";
+                            try { disp = si.getDisplayName() == null ? "" : si.getDisplayName().toString(); } catch (Throwable ignored) { }
+                            String car = si.getCarrierName() == null ? "" : si.getCarrierName().toString();
+                            s.put("carrier", car);
+                            s.put("displayName", disp);
+                            // 号码：部分运营商把号码写入 SIM 卡，可直接读
+                            String num = "";
+                            try { num = si.getNumber() == null ? "" : si.getNumber(); } catch (Throwable ignored) { }
+                            s.put("number", num);
                             s.put("esim", Build.VERSION.SDK_INT >= 28 && si.isEmbedded());
                             slots.put(s);
                         }

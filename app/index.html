@@ -60,9 +60,9 @@ body{background:var(--bg);color:var(--ink);
 .ksheet .no{background:#f7f4f0;color:var(--ink2)}
 .lang-row{margin-top:16px;padding-top:14px;border-top:1px solid var(--line2)}
 .lang-label{font-size:11.5px;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:9px}
-.lang-opts{display:flex;flex-wrap:wrap;gap:8px}
-.lang-opts button{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;
-  color:var(--ink2);font-size:13px}
+.lang-opts{display:flex;gap:8px}
+.lang-opts button{flex:1;min-width:0;padding:9px 4px;border-radius:10px;border:1px solid var(--line);
+  background:#fff;color:var(--ink2);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lang-opts button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .start{margin-top:44px;width:100%;max-width:280px;padding:17px;border:none;border-radius:99px;
   background:var(--accent);color:#fff;font-size:16px;font-weight:600;letter-spacing:.5px;
@@ -265,14 +265,33 @@ try{
   }
 }catch(e){}
 /* MCC 国家码 → 国家代码（运营商侧硬数据） */
-const MCC_CC={ '460':'CN','454':'HK','455':'MO','466':'TW','310':'US','311':'US','312':'US','313':'US',
-'314':'US','315':'US','316':'US','234':'GB','235':'GB','525':'SG','440':'JP','441':'JP','250':'RU',
-'404':'IN','405':'IN','406':'IN','302':'CA','505':'AU','262':'DE','208':'FR','724':'BR','450':'KR',
-'510':'ID','520':'TH','452':'VN','502':'MY' };
+const MCC_CC={ '460':'CN','461':'CN','454':'HK','455':'MO','466':'TW','310':'US','311':'US','312':'US',
+'313':'US','314':'US','315':'US','316':'US','330':'PR','234':'GB','235':'GB','262':'DE','208':'FR',
+'214':'ES','222':'IT','240':'SE','242':'NO','244':'FI','238':'DK','204':'NL','206':'BE','228':'CH',
+'232':'AT','230':'CZ','260':'PL','272':'IE','268':'PT','202':'GR','216':'HU','226':'RO','284':'BG',
+'440':'JP','441':'JP','450':'KR','467':'KP','525':'SG','502':'MY','510':'ID','520':'TH','452':'VN',
+'515':'PH','404':'IN','405':'IN','406':'IN','410':'PK','413':'LK','470':'BD','302':'CA','505':'AU',
+'530':'NZ','724':'BR','722':'AR','730':'CL','732':'CO','714':'PA','712':'CR','250':'RU','255':'UA',
+'257':'BY','259':'MD','286':'TR','425':'IL','420':'SA','424':'AE','431':'AE','602':'EG','603':'DZ',
+'604':'MA','621':'NG','639':'KE','655':'ZA','286':'TR','901':'XX' };
+/* MCC 是 SIM 卡出厂写入的，属于硬数据；countryIso 是系统层字段，
+   无服务或 ROM 异常时可能是脏值（实测见过 MCC=460 却报 us 的情况）。
+   因此以 MCC 为准，ISO 只在 MCC 缺失时兜底，并单独记录两者是否矛盾。 */
 function mccCountry(s){
   if(!s) return '';
   const mcc=String(s.mcc||'').trim();
-  return (String(s.country||'').toUpperCase())||MCC_CC[mcc]||'';
+  const iso=String(s.country||'').toUpperCase();
+  const byMcc=MCC_CC[mcc]||'';
+  if(byMcc) return byMcc;        // MCC 优先
+  return iso;                     // 没有 MCC 才用 ISO
+}
+/* ISO 与 MCC 是否冲突（冲突说明系统字段不可信，需要提示） */
+function isoConflict(s){
+  if(!s) return false;
+  const mcc=String(s.mcc||'').trim();
+  const iso=String(s.country||'').toUpperCase();
+  const byMcc=MCC_CC[mcc]||'';
+  return !!(byMcc && iso && byMcc!==iso);
 }
 const SYSFONT_STR=(SYSFONTS||[]).join(' ').toLowerCase();
 const sysHas=n=>SYSFONT_STR.indexOf(String(n).toLowerCase())>=0;
@@ -304,6 +323,7 @@ function detectLang(){
   }catch(e){ return 'zh-CN'; }
 }
 let LANG = detectLang();
+console.log('[LANG] nav='+((navigator.languages||[]).join(','))+' | '+navigator.language+' → '+LANG);
 
 const I18N = {
 'zh-CN':{
@@ -402,6 +422,7 @@ const I18N = {
     ipVeto:(cc)=>`出口 IP 位于官方不支持地区（${cc}），账号创建与使用都不被允许`,
     variantSC:'简体中文', variantTC:'繁体中文', variantNone:'无中文变体',
     vFonts:(n,list,v)=>`本机字体表检出 ${n} 个中文字体：${list}${v?'，含厂商字体':''}`,
+    simCard:(slot,cc,mcc,mnc,e,bad)=>`卡${slot+1}：${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · 实体卡'}${bad?`（系统报 ${bad}，与 MCC 不符，以 MCC 为准）`:''}`,
     vNoFonts:'本机字体表未检出中文字体',
     vNoVendorFonts:'未检出厂商字体',
     simUnknownState:'状态未知',
@@ -443,49 +464,6 @@ const I18N = {
     evPtrIsp:'反向解析属运营商自有域名',
     evMobile:'ip-api 判定为移动网络',
     evPcRes:'proxycheck 判定为住宅',
-    variantSC:'簡體中文', variantTC:'繁體中文', variantNone:'無中文變體',
-    vFonts:(n,list,v)=>`本機字型表檢出 ${n} 個中文字型：${list}${v?'，含廠商字型':''}`,
-    vNoFonts:'本機字型表未檢出中文字型',
-    vNoVendorFonts:'未檢出廠商字型',
-    simUnknownState:'狀態未知',
-    simReady:'已就緒',
-    simNoCarrier:'未知電信商',
-    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'實體卡'}`,
-    simTagDual:(n,a)=>`共 ${n} 張卡：${a}`,
-    simTagLine1:'本機號碼可讀',
-    simTagGoodSlot:'卡2 為支援地區號碼，可用於驗證',
-    rootNone:'未發現 Root 痕跡',
-    rootFound:(e)=>`發現 Root 痕跡：${e}`,
-    sysAbnormal:'系統分區異常',
-    emuReal:'真實手機硬體',
-    emuFound:(e)=>`偵測到模擬器特徵：${e}`,
-    buildAbnormal:'建置屬性異常',
-    emuVeto:'執行於模擬器或雲手機環境，這是批次註冊的主要特徵，帳號必被判為高風險',
-    romOfficial:'官方發布版',
-    romUnofficial:(t,ty)=>`非官方建置 ${t} / ${ty}`,
-    romPatch:(x)=>`（安全補丁 ${x}）`,
-    payPlay:'來自 Google Play 商店',
-    paySideload:'非商店安裝（系統內有 Google 服務）',
-    payNoGms:'系統中沒有 Google 服務框架（本地應用體系）',
-    payInstalled:(l)=>` · 已裝 ${l}`,
-    vpnDefault:'系統級代理已啟用',
-    vpnOff:'未偵測到系統級代理，流量直連',
-    v6Owner:(op)=>`（${op} IPv6 網段）`,
-    opCT:'中國電信', opCU:'中國聯通', opCM:'中國移動', opCN:'中國',
-    rtcMdns:(n)=>`內網位址已被 mDNS 匿名化（${n} 條 .local）`,
-    rtcLocalOnly:(n)=>`內網位址可見（${n} 條），但無公網洩露`,
-    rtcNone:'未洩露公網位址',
-    rtcVeto:(cc)=>`即時通訊通道洩露了 ${cc} 的公網位址，等於直接暴露真實位置`,
-    evDc:'ip-api 標記為資料中心',
-    evAsn:(asn,name)=>`ASN ${asn} 屬批發機房（${name}）`,
-    evAsnName:'ASN 名稱含機房特徵',
-    evPtr:(h)=>`反向解析 ${h}`,
-    evProxy:'ip-api 標記為代理/VPN',
-    evPcProxy:(t)=>`proxycheck 判定為代理（${t}）`,
-    evPtrThird:(h)=>`反向解析為第三方網域 ${h}（疑似住宅代理）`,
-    evPtrIsp:'反向解析屬電信商自有網域',
-    evMobile:'ip-api 判定為行動網路',
-    evPcRes:'proxycheck 判定為住宅',
     unk:'未知'
   }
 },
@@ -547,41 +525,85 @@ const I18N = {
     'Claude 服务连通':{n:'Claude 服務連通',why:'連不上說明代理規則漏了 anthropic 的網域。常見的情況是瀏覽器能用、命令列報 403，因為兩邊走的不是一個出口。',fix:'檢查分流規則，把 anthropic.com、claude.ai、claudeusercontent.com 都放進去。'}
   },
   r:{
-    tzCN:(tz)=>`系統時區為中國時區（${tz}），與官方支援地區直接衝突`,
+    tzCN:(tz)=>`系統時區為中國時區（${tz}），與官方支持地區直接衝突`,
     tzNote:(tz,ip,m)=>`${tz}（IP 時區 ${ip}${m?'，不一致':'，一致'}）`,
-    tzUnknown:'未識別',
-    simLimited:(st,noPerm)=>`偵測到 SIM 卡（${st}），但明細讀取受限${noPerm?'：未授予電話權限':'：系統未回傳卡資訊'}`,
-    simNone:(st)=>`沒插 SIM 卡（${st}），純 WiFi 環境，讀不到電信商資訊`,
-    noDeviceInfo:'未讀取到裝置資訊',
-    noSysInfo:'未讀取到系統資訊',
-    noAppInfo:'未讀取到應用安裝資訊',
-    noAppInfo2:'未讀取到應用資訊',
-    parallel:(list,c)=>`偵測到多開/分身容器：${list}${c}`,
-    profiles:(n,c)=>`存在 ${n} 個使用者設定（第二空間 / 工作資料 / 多使用者）${c}`,
-    cleanProfile:(c)=>`未發現多開容器，單一使用者設定${c}`,
-    claudeInstalled:' · 已裝 Claude 用戶端',
-    noNetState:'未讀取到網路狀態',
-    noIP:'無法取得出口 IP 資訊',
-    intelDown:'多個情報介面都不可達，無法判斷線路類型',
+    tzUnknown:'未识别',
+    simLimited:(st,noPerm)=>`檢測到 SIM 卡（${st}），但明细讀取受限${noPerm?'：未授予电话權限':'：系統未返回卡信息'}`,
+    simNone:(st)=>`没插 SIM 卡（${st}），纯 WiFi 环境，讀不到運營商信息`,
+    noDeviceInfo:'未讀取到設備信息',
+    noSysInfo:'未讀取到系統信息',
+    noAppInfo:'未讀取到應用安裝信息',
+    noAppInfo2:'未讀取到應用信息',
+    parallel:(list,c)=>`檢測到多开/分身容器：${list}${c}`,
+    profiles:(n,c)=>`存在 ${n} 個用戶配置（第二空间 / 工作资料 / 多用戶）${c}`,
+    cleanProfile:(c)=>`未發現多开容器，單一用戶配置${c}`,
+    claudeInstalled:' · 已裝 Claude 客戶端',
+    noNetState:'未讀取到網絡狀態',
+    noIP:'無法獲取出口 IP 信息',
+    intelDown:'多個情報接口都不可達，無法判斷線路類型',
     dcVote:(n,t)=>`機房 / 代理出口（${n} 條證據一致）${t}`,
     dcOne:(t)=>`疑似機房 / 代理出口（1 條證據）${t}`,
-    residential:(t)=>`住宅 / 商業寬頻，未見機房或代理特徵${t}`,
+    residential:(t)=>`住宅 / 商業寬帶，未見機房或代理特徵${t}`,
     unsure:(t)=>`無法確認（證據不足，不認定為住宅）${t}`,
-    noV6:'沒有可用的 IPv6 出口，不存在繞過',
+    noV6:'没有可用的 IPv6 出口，不存在繞過',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，與 IPv4（${v4}）不一致`:'，與 IPv4 一致'}`,
     rtcLimited:'未能建立探測通道（可能被系統限制），結果不確定',
-    rtcPub:(ip,cc,bad)=>`探測到公網位址 ${ip}${cc?`（${cc}）`:''}${bad?'，與出口地區不一致':''}`,
+    rtcPub:(ip,cc,bad)=>`探測到公網地址 ${ip}${cc?`（${cc}）`:''}${bad?'，與出口地區不一致':''}`,
     rtcLeakV6:(cc)=>`IPv6 流量繞過隧道，真實出口暴露為 ${cc}`,
     ipUnlocated:'IP 未定位，無法比對',
-    bothBad:'東八區 + 不支援地區 IP，兩個訊號同時指向同一處',
+    bothBad:'東八區 + 不支持地區 IP，两個信號同時指向同一處',
     tzVsIp:(cc)=>`東八區 vs IP ${cc}，時空衝突`,
-    ipUnsup:(cc)=>`IP ${cc} 不在支援名單，時區雖已對齊但地區本身不通過`,
+    ipUnsup:(cc)=>`IP ${cc} 不在支持名單，時區雖已對齊但地區本身不通過`,
     aligned:'時區與 IP 地區一致',
     apiOk:'api.anthropic.com 可連通',
     apiFail:'api.anthropic.com 不可達',
     err:'檢測異常，未計入',
     ipCN:(cc,isp)=>`${cc}　${isp}`,
-    ipVeto:(cc)=>`出口 IP 位於官方不支援地區（${cc}），帳號建立與使用都不被允許`,
+    ipVeto:(cc)=>`出口 IP 位于官方不支持地區（${cc}），账號创建與使用都不被允许`,
+    variantSC:'簡體中文', variantTC:'繁體中文', variantNone:'無中文变體',
+    vFonts:(n,list,v)=>`本機字體表檢出 ${n} 個中文字體：${list}${v?'，含厂商字體':''}`,
+    simCard:(slot,cc,mcc,mnc,e,bad)=>`卡${slot+1}：${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · 實體卡'}${bad?`（系統報 ${bad}，與 MCC 不符，以 MCC 為準）`:''}`,
+    vNoFonts:'本機字體表未檢出中文字體',
+    vNoVendorFonts:'未檢出厂商字體',
+    simUnknownState:'狀態未知',
+    simReady:'已就绪',
+    simNoCarrier:'未知運營商',
+    simTagMain:(cc,ca,mcc,e)=>`${cc} · ${ca} · MCC ${mcc} · ${e?'eSIM':'實體卡'}`,
+    simTagDual:(n,a)=>`共 ${n} 张卡：${a}`,
+    simTagLine1:'本機號碼可讀',
+    simTagGoodSlot:'卡2 為支持地區號碼，可用于验證',
+    rootNone:'未發現 Root 痕迹',
+    rootFound:(e)=>`發現 Root 痕迹：${e}`,
+    sysAbnormal:'系統分區異常',
+    emuReal:'真實手機硬件',
+    emuFound:(e)=>`檢測到模擬器特徵：${e}`,
+    buildAbnormal:'构建屬性異常',
+    emuVeto:'運行在模擬器或云手機环境，這是批量註冊的主要特徵，账號必被判為高危',
+    romOfficial:'官方發布版',
+    romUnofficial:(t,ty)=>`非官方构建 ${t} / ${ty}`,
+    romPatch:(x)=>`（安全補丁 ${x}）`,
+    payPlay:'來自 Google Play 商店',
+    paySideload:'非商店安裝（系統內有 Google 服務）',
+    payNoGms:'系統中没有 Google 服務框架（國內應用體系）',
+    payInstalled:(l)=>` · 已裝 ${l}`,
+    vpnDefault:'系統级代理已啟用',
+    vpnOff:'未檢測到系統级代理，流量直連',
+    v6Owner:(op)=>`（${op} IPv6 段）`,
+    opCT:'中國电信', opCU:'中國联通', opCM:'中國移動', opCN:'中國',
+    rtcMdns:(n)=>`內網地址已被 mDNS 匿名化（${n} 條 .local）`,
+    rtcLocalOnly:(n)=>`內網地址可見（${n} 條），但無公網洩露`,
+    rtcNone:'未洩露公網地址',
+    rtcVeto:(cc)=>`實時通信通道洩露了 ${cc} 的公網地址，等于直接暴露真實位置`,
+    evDc:'ip-api 标记為数據中心',
+    evAsn:(asn,name)=>`ASN ${asn} 屬批發機房（${name}）`,
+    evAsnName:'ASN 名称含機房特徵',
+    evPtr:(h)=>`反向解析 ${h}`,
+    evProxy:'ip-api 标记為代理/VPN',
+    evPcProxy:(t)=>`proxycheck 判定為代理（${t}）`,
+    evPtrThird:(h)=>`反向解析為第三方域名 ${h}（疑似住宅代理）`,
+    evPtrIsp:'反向解析屬運營商自有域名',
+    evMobile:'ip-api 判定為移動網絡',
+    evPcRes:'proxycheck 判定為住宅',
     unk:'未知'
   }
 },
@@ -680,6 +702,7 @@ const I18N = {
     ipVeto:(cc)=>`Exit IP is in an unsupported region (${cc}); account creation and use are not allowed`,
     variantSC:'Simplified Chinese', variantTC:'Traditional Chinese', variantNone:'no Chinese variant',
     vFonts:(n,list,v)=>`${n} CJK fonts in the system table: ${list}${v?', including vendor fonts':''}`,
+    simCard:(slot,cc,mcc,mnc,e,bad)=>`SIM ${slot+1}: ${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · physical'}${bad?` (system reports ${bad}, conflicts with MCC — MCC wins)`:''}`,
     vNoFonts:'No CJK fonts found in the system table',
     vNoVendorFonts:'No vendor fonts found',
     simUnknownState:'unknown state',
@@ -819,6 +842,7 @@ const I18N = {
     ipVeto:(cc)=>`出口 IP が非対応地域（${cc}）にあり、アカウント作成も利用も許可されません`,
     variantSC:'簡体字中国語', variantTC:'繁体字中国語', variantNone:'中国語の変種なし',
     vFonts:(n,list,v)=>`システムフォント表に中国語フォント ${n} 個：${list}${v?'（メーカー製を含む）':''}`,
+    simCard:(slot,cc,mcc,mnc,e,bad)=>`カード${slot+1}：${cc} · MCC ${mcc}/MNC ${mnc}${e?' · eSIM':' · 物理カード'}${bad?`（システムは ${bad} と報告、MCC と矛盾、MCC を優先）`:''}`,
     vNoFonts:'システムフォント表に中国語フォントなし',
     vNoVendorFonts:'メーカー製フォントなし',
     simUnknownState:'状態不明',
@@ -1121,20 +1145,34 @@ const CHECKS=[
     }
     return {p:10, v:R().simNone(st)};
   }
-  const main=slots[0]||{};
-  const cc=mccCountry(main);
-  const carrier=main.carrier||NATIVE&&NATIVE.simOperator||'';
-  const esim=!!main.esim;
-  const all=slots.map(x=>mccCountry(x)||'?');
-  const good=all.filter(x=>x!=='?'&&!['CN','HK','MO'].includes(x));
-  const badMain=['CN','HK','MO'].includes(cc);
-  const tags=[R().simTagMain(cc||'?',carrier||R().simNoCarrier,main.mcc||'?',esim)];
-  if(slots.length>1) tags.push(R().simTagDual(slots.length,all.join(' + ')));
+  /* 逐卡列出：卡槽、MCC/MNC、真实归属国。
+     carrierName 在无服务时会返回"无服务"，不能当运营商用，只用 MCC 推国家。 */
+  const cards=slots.map(x=>{
+    const c=mccCountry(x)||'?';
+    return {slot:(x.slot!=null?x.slot:'?'), cc:c, mcc:String(x.mcc||'?'), mnc:String(x.mnc||'?'),
+            esim:!!x.esim, iso:String(x.country||'').toUpperCase(), conflict:isoConflict(x),
+            name:String(x.carrier||'')};
+  });
+  const countries=cards.map(c=>c.cc);
+  const good=countries.filter(c=>c!=='?'&&!['CN','HK','MO'].includes(c));
+  const badMain=['CN','HK','MO'].includes(cards[0].cc);
+
+  const tags=[];
+  cards.forEach(c=>{
+    tags.push(R().simCard(c.slot,c.cc,c.mcc,c.mnc,c.esim,c.conflict?c.iso:''));
+  });
   if(s.line1Readable) tags.push(R().simTagLine1);
-  // 只要有一张卡属于支持地区，就存在可用于验证的实体号码
-  const p = good.length ? (badMain?6:10) : (badMain?3:10);
   if(good.length && badMain) tags.push(R().simTagGoodSlot);
-  return {p, v:tags.join(' · ')};
+
+  const p = good.length ? (badMain?6:10) : (badMain?3:10);
+  const build=()=>{
+    const t=[];
+    cards.forEach(c=>{ t.push(R().simCard(c.slot,c.cc,c.mcc,c.mnc,c.esim,c.conflict?c.iso:'')); });
+    if(s.line1Readable) t.push(R().simTagLine1);
+    if(good.length && badMain) t.push(R().simTagGoodSlot);
+    return t.join(' · ');
+  };
+  return {p, v:build(), recalc:build};
 }},
 
 {cat:'dev',key:'设备型号',w:1,fn:()=>{
@@ -1367,9 +1405,14 @@ function setLang(code){
   LANG=code;
   try{ localStorage.setItem('lang',code); }catch(e){}
   applyLang();
-  /* 结果页/明细页如果已经渲染过，就地重刷文案 */
+  /* 结果值（v）是用旧语言拼出来的字符串，必须按原参数重算，
+     否则会出现界面已是中文、结果串还是日文的情况 */
   if(results.length){
-    results.forEach(r=>{ const t=itemText(r.key); r.nm=t.n; r.why=t.why; r.fix=t.fix; });
+    results.forEach(r=>{
+      const t=itemText(r.key);
+      r.nm=t.n; r.why=t.why; r.fix=t.fix;
+      if(r.recalc){ try{ const v=r.recalc(); r.v=v; }catch(e){} }
+    });
     if($('v-detail').classList.contains('on')) buildDetail();
     if($('v-result').classList.contains('on')) showResult();
   }
@@ -1444,7 +1487,8 @@ async function scan(){
     row.querySelector('.vl').innerHTML='<b class="'+CLS[lv]+'">'+fmtNum(got)+'</b><span style="color:var(--ink3);font-size:11px">/'+w+'</span>';
 
     console.log('[CK] '+t.n+' | '+r.p+'/10 → '+fmtNum(got)+'/'+w+' | '+r.v);
-    results.push({cat:c.cat,key:c.key,nm:t.n,p:r.p,w:w,got:got,v:r.v,why:t.why,fix:t.fix,veto:r.veto||null});
+    results.push({cat:c.cat,key:c.key,nm:t.n,p:r.p,w:w,got:got,v:r.v,why:t.why,fix:t.fix,
+                  veto:r.veto||null,recalc:r.recalc||null});
 
     doneCount++;totalScore+=got;
     $('scanCount').textContent=doneCount+' / '+TOTAL;
