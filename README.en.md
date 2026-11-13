@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#install)
-[![Size](https://img.shields.io/badge/APK-61%20KB-78716a.svg)](#install)
+[![Size](https://img.shields.io/badge/APK-65%20KB-78716a.svg)](#install)
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#privacy)
 
 [简体中文](README.md) · [繁體中文](README.zh-TW.md) · **English** · [日本語](README.ja.md)
@@ -133,7 +133,7 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-The script runs `aapt2 compile → link → javac → d8 → zipalign → apksigner`, produces a 61 KB APK and installs it to any connected device.
+The script runs `aapt2 compile → link → javac → d8 → zipalign → apksigner`, produces a 65 KB APK and installs it to any connected device.
 
 > The first build creates `android/keystore.jks`. That is your signing key, already excluded in `.gitignore`. **Do not commit it.**
 

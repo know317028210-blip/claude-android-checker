@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#安裝)
-[![Size](https://img.shields.io/badge/APK-61%20KB-78716a.svg)](#安裝)
+[![Size](https://img.shields.io/badge/APK-65%20KB-78716a.svg)](#安裝)
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#隱私)
 
 [简体中文](README.md) · **繁體中文** · [English](README.en.md) · [日本語](README.ja.md)
@@ -133,7 +133,7 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-腳本會依序執行 `aapt2 compile → link → javac → d8 → zipalign → apksigner`，產出 61 KB 的 APK 並自動裝到已連接的裝置。
+腳本會依序執行 `aapt2 compile → link → javac → d8 → zipalign → apksigner`，產出 65 KB 的 APK 並自動裝到已連接的裝置。
 
 > 首次建置會在 `android/` 下產生 `keystore.jks`。這個檔案是簽章私鑰，已在 `.gitignore` 排除，**不要提交**。
 

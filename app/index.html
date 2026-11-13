@@ -267,6 +267,37 @@ try{
 /* MCC 国家码 → 国家代码（运营商侧硬数据） */
 
 /* 常见国家/地区的中英文名，SIM 卡国家展示用 */
+
+/* 常见时区的标准 UTC 偏移，用于校验"时区名"和"实际偏移"是否一致 */
+const TZ_OFFSET={
+ 'Asia/Shanghai':8,'Asia/Urumqi':6,'Asia/Chongqing':8,'Asia/Harbin':8,'Asia/Kashgar':6,
+ 'Asia/Hong_Kong':8,'Asia/Macau':8,'Asia/Taipei':8,'Asia/Tokyo':9,'Asia/Seoul':9,
+ 'Asia/Singapore':8,'Asia/Kuala_Lumpur':8,'Asia/Bangkok':7,'Asia/Jakarta':7,
+ 'Asia/Manila':8,'Asia/Ho_Chi_Minh':7,'Asia/Kolkata':5.5,'Asia/Dubai':4,
+ 'Europe/London':0,'Europe/Paris':1,'Europe/Berlin':1,'Europe/Madrid':1,
+ 'Europe/Rome':1,'Europe/Amsterdam':1,'Europe/Zurich':1,'Europe/Stockholm':1,
+ 'Europe/Moscow':3,'Europe/Warsaw':1,'Europe/Lisbon':0,'Europe/Istanbul':3,
+ 'America/New_York':-5,'America/Chicago':-6,'America/Denver':-7,'America/Los_Angeles':-8,
+ 'America/Toronto':-5,'America/Vancouver':-8,'America/Sao_Paulo':-3,'America/Mexico_City':-6,
+ 'Australia/Sydney':10,'Australia/Melbourne':10,'Australia/Perth':8,
+ 'Pacific/Auckland':12,'Africa/Johannesburg':2,'Africa/Cairo':2
+};
+/* 国家/地区名的本地化：优先用浏览器内置的 Intl.DisplayNames，
+   它会按当前语言返回"中国 / China / 中國 / 中国"，比维护静态表准确得多。
+   静态表只作为老内核的兜底。 */
+function ccName(cc){
+  if(!cc) return '';
+  try{
+    const tag = LANG==='zh-CN' ? 'zh-Hans' : LANG==='zh-TW' ? 'zh-Hant' : LANG;
+    const dn = new Intl.DisplayNames([tag], {type:'region'});
+    const n = dn.of(cc);
+    if(n && n !== cc) return n;
+  }catch(e){}
+  /* 老内核没有 Intl.DisplayNames 时：中文界面用静态表，
+     其他语言直接回退到 ISO 代码（CN / US），比显示中文名更清楚 */
+  if(LANG==='zh-CN'||LANG==='zh-TW') return CC_NAME[cc] || cc;
+  return cc;
+}
 const CC_NAME={
  CN:'中国',HK:'中国香港',MO:'中国澳门',TW:'中国台湾',US:'美国',GB:'英国',JP:'日本',KR:'韩国',
  SG:'新加坡',MY:'马来西亚',TH:'泰国',VN:'越南',PH:'菲律宾',ID:'印度尼西亚',IN:'印度',
@@ -393,16 +424,14 @@ const I18N = {
     'IPv6 泄露':{n:'IPv6 泄露',why:'大部分代理只管 IPv4。访问支持 IPv6 的网站时，请求会从本地 IPv6 直接溜出去，把真实运营商暴露了。很多人“明明挂着代理还是被封”，问题就在这。',fix:'手机网络设置里把 IPv6 关掉，或者用能接管 v6 的全局模式。'},
     '实时通信穿透':{n:'实时通信穿透',why:'实时通话功能为了连线，会去探本机的网络地址，普通代理拦不住。探到的地址和出口不在一个地方，等于直接告诉对方你真实在哪。',fix:'用全局代理，或者在系统里限制实时通信权限。'},
     '时区与 IP 一致性':{n:'时区与 IP 一致性',why:'这两项分开看都没事，放一起就出问题。时区在北京、IP 在东京，一对不上，比单独任何一项都明显。',fix:'让时区跟着出口走，最省事也最有效。'},
-    'Claude 服务连通':{n:'Claude 服务连通',why:'连不上说明代理规则漏了 anthropic 的域名。常见的情况是浏览器能用、命令行报 403，因为两边走的不是一个出口。',fix:'检查分流规则，把 anthropic.com、claude.ai、claudeusercontent.com 都放进去。'}
+    'Claude 服务连通':{n:'Claude 服务连通',why:'会分别探测 api.anthropic.com、claude.ai、claudeusercontent.com 三个域名。缺一个就会出现能登录但传不了文件这类怪问题，所以分开测。',fix:'检查分流规则，把 anthropic.com、claude.ai、claudeusercontent.com 都放进去。'}
   },
   /* 结果值文案 */
   r:{
     simLimited:(noPerm)=>`读到了 SIM 卡，但卡信息被系统限制${noPerm?'（未授予电话权限）':''}`,
     simNone:'没有插 SIM 卡',
-    simLimited:(noPerm)=>`讀到了 SIM 卡，但卡資訊被系統限制${noPerm?'（未授予電話權限）':''}`,
-    simNone:'沒有插 SIM 卡',
     simSlot:(n)=>`卡${n}`,
-    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simCountry:(cc)=>ccName(cc),
     simEsim:'eSIM',
     simInactive:'无服务',
     simTail:(t)=>`尾号 ${t}`,
@@ -425,7 +454,7 @@ const I18N = {
     dcOne:(t)=>`疑似机房 / 代理出口（1 条证据）${t}`,
     residential:(t)=>`住宅 / 商业宽带，未见机房或代理特征${t}`,
     unsure:(t)=>`无法确认（证据不足，不认定为住宅）${t}`,
-    noV6:'没有可用的 IPv6 出口，不存在绕过',
+    noV6:'未探测到 IPv6 出口，不存在绕过',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，与 IPv4（${v4}）不一致`:'，与 IPv4 一致'}`,
     rtcLimited:'未能建立探测通道（可能被系统限制），结果不确定',
     rtcPub:(ip,cc,bad)=>`探测到公网地址 ${ip}${cc?`（${cc}）`:''}${bad?'，与出口地区不一致':''}`,
@@ -435,6 +464,10 @@ const I18N = {
     tzVsIp:(cc)=>`东八区 vs IP ${cc}，时空冲突`,
     ipUnsup:(cc)=>`IP ${cc} 不在支持名单，时区虽已对齐但地区本身不通过`,
     aligned:'时区与 IP 地区一致',
+    tzOffMismatch:(off,exp)=>`${off}，但时区名对应的是 UTC${exp>=0?'+':''}${exp}，两者不一致`,
+    v6Unknown:'无法确认是否有 IPv6 出口（查询未成功）',
+    apiAllOk:'三个域名都可达',
+    apiPartial:(ok,bad)=>`${bad.join('、')} 不可达${ok.length?`（${ok.join('、')} 正常）`:''}`,
     apiOk:'api.anthropic.com 可连通',
     apiFail:'api.anthropic.com 不可达',
     err:'检测异常，未计入',
@@ -534,11 +567,13 @@ const I18N = {
     'IPv6 泄露':{n:'IPv6 洩漏',why:'大部分代理只管 IPv4。存取支援 IPv6 的網站時，請求會從本地 IPv6 直接溜出去，把真實電信商暴露了。很多人「明明掛著代理還是被封」，問題就在這。',fix:'手機網路設定裡把 IPv6 關掉，或者用能接管 v6 的全域模式。'},
     '实时通信穿透':{n:'即時通訊穿透',why:'即時通話功能為了連線，會去探本機的網路位址，普通代理攔不住。探到的位址和出口不在一個地方，等於直接告訴對方你真實在哪。',fix:'用全域代理，或者在系統裡限制即時通訊權限。'},
     '时区与 IP 一致性':{n:'時區與 IP 一致性',why:'這兩項分開看都沒事，放一起就出問題。時區在本地、IP 在東京，一對不上，比單獨任何一項都明顯。',fix:'讓時區跟著出口走，最省事也最有效。'},
-    'Claude 服务连通':{n:'Claude 服務連通',why:'連不上說明代理規則漏了 anthropic 的網域。常見的情況是瀏覽器能用、命令列報 403，因為兩邊走的不是一個出口。',fix:'檢查分流規則，把 anthropic.com、claude.ai、claudeusercontent.com 都放進去。'}
+    'Claude 服务连通':{n:'Claude 服務連通',why:'會分別探測 api.anthropic.com、claude.ai、claudeusercontent.com 三個網域。缺一個就會出現能登入但傳不了檔案這類怪問題，所以分開測。',fix:'檢查分流規則，把 anthropic.com、claude.ai、claudeusercontent.com 都放進去。'}
   },
   r:{
+    simLimited:(noPerm)=>`讀到了 SIM 卡，但卡資訊被系統限制${noPerm?'（未授予電話權限）':''}`,
+    simNone:'沒有插 SIM 卡',
     simSlot:(n)=>`卡${n}`,
-    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simCountry:(cc)=>ccName(cc),
     simEsim:'eSIM',
     simInactive:'無服務',
     simTail:(t)=>`尾號 ${t}`,
@@ -561,7 +596,7 @@ const I18N = {
     dcOne:(t)=>`疑似機房 / 代理出口（1 條證據）${t}`,
     residential:(t)=>`住宅 / 商業寬帶，未見機房或代理特徵${t}`,
     unsure:(t)=>`無法確認（證據不足，不認定為住宅）${t}`,
-    noV6:'没有可用的 IPv6 出口，不存在繞過',
+    noV6:'未偵測到 IPv6 出口，不存在繞過',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，與 IPv4（${v4}）不一致`:'，與 IPv4 一致'}`,
     rtcLimited:'未能建立探測通道（可能被系統限制），結果不確定',
     rtcPub:(ip,cc,bad)=>`探測到公網地址 ${ip}${cc?`（${cc}）`:''}${bad?'，與出口地區不一致':''}`,
@@ -571,6 +606,10 @@ const I18N = {
     tzVsIp:(cc)=>`東八區 vs IP ${cc}，時空衝突`,
     ipUnsup:(cc)=>`IP ${cc} 不在支持名單，時區雖已對齊但地區本身不通過`,
     aligned:'時區與 IP 地區一致',
+    tzOffMismatch:(off,exp)=>`${off}，但時區名對應的是 UTC${exp>=0?'+':''}${exp}，兩者不一致`,
+    v6Unknown:'無法確認是否有 IPv6 出口（查詢未成功）',
+    apiAllOk:'三個網域都可達',
+    apiPartial:(ok,bad)=>`${bad.join('、')} 不可達${ok.length?`（${ok.join('、')} 正常）`:''}`,
     apiOk:'api.anthropic.com 可連通',
     apiFail:'api.anthropic.com 不可達',
     err:'檢測異常，未計入',
@@ -670,13 +709,13 @@ const I18N = {
     'IPv6 泄露':{n:'IPv6 leak',why:'Most proxies only handle IPv4. When a site supports IPv6, the request slips out through the local IPv6 route and exposes your real carrier. This is the usual reason people get blocked even while running a proxy.',fix:'Turn off IPv6 in the phone network settings, or use a global mode that also captures v6.'},
     '实时通信穿透':{n:'WebRTC leak',why:'Real-time calling probes local network addresses in order to connect, and ordinary proxies cannot stop it. If the address it finds is in a different place than your exit, you have told them where you really are.',fix:'Use a global proxy, or restrict real-time communication permissions in the system.'},
     '时区与 IP 一致性':{n:'Timezone vs IP',why:'Either one alone is fine; together they become a problem. Timezone in Beijing with an IP in Tokyo is a mismatch more obvious than either signal by itself.',fix:'Let the timezone follow your exit. Cheapest and most effective step.'},
-    'Claude 服务连通':{n:'Claude reachability',why:'Failing to connect means the proxy rules miss an anthropic domain. The usual symptom is a working browser but a 403 from the command line, because the two use different exits.',fix:'Check your routing rules and include anthropic.com, claude.ai and claudeusercontent.com.'}
+    'Claude 服务连通':{n:'Claude reachability',why:'Probes api.anthropic.com, claude.ai and claudeusercontent.com separately. Missing one causes odd cases like signing in fine but failing to upload files, so they are tested apart.',fix:'Check your routing rules and include anthropic.com, claude.ai and claudeusercontent.com.'}
   },
   r:{
     simLimited:(noPerm)=>`SIM present but card details are restricted${noPerm?' (phone permission not granted)':''}`,
     simNone:'No SIM card',
     simSlot:(n)=>`SIM ${n}`,
-    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simCountry:(cc)=>ccName(cc),
     simEsim:'eSIM',
     simInactive:'no service',
     simTail:(t)=>`ending ${t}`,
@@ -699,7 +738,7 @@ const I18N = {
     dcOne:(t)=>`Likely datacenter / proxy exit (1 signal)${t}`,
     residential:(t)=>`Residential / business broadband, no hosting or proxy markers${t}`,
     unsure:(t)=>`Unconfirmed (insufficient evidence, not classified as residential)${t}`,
-    noV6:'No IPv6 exit available, nothing to bypass',
+    noV6:'No IPv6 exit detected, nothing to bypass',
     v6Is:(cc,owner,leak,v4)=>`IPv6 exit ${cc}${owner}${leak?`, differs from IPv4 (${v4})`:', same as IPv4'}`,
     rtcLimited:'Probe channel could not be established (possibly restricted), result uncertain',
     rtcPub:(ip,cc,bad)=>`Public address detected ${ip}${cc?` (${cc})`:''}${bad?', differs from exit region':''}`,
@@ -709,6 +748,10 @@ const I18N = {
     tzVsIp:(cc)=>`UTC+8 vs IP ${cc}, a time-space conflict`,
     ipUnsup:(cc)=>`IP ${cc} is not on the supported list; timezone matches but the region itself fails`,
     aligned:'Timezone and IP region agree',
+    tzOffMismatch:(off,exp)=>`${off}, but the timezone name implies UTC${exp>=0?'+':''}${exp} — they disagree`,
+    v6Unknown:'Cannot determine whether an IPv6 exit exists (probe failed)',
+    apiAllOk:'All three domains reachable',
+    apiPartial:(ok,bad)=>`${bad.join(', ')} unreachable${ok.length?` (${ok.join(', ')} fine)`:''}`,
     apiOk:'api.anthropic.com reachable',
     apiFail:'api.anthropic.com unreachable',
     err:'Check errored, not counted',
@@ -808,13 +851,13 @@ const I18N = {
     'IPv6 泄露':{n:'IPv6 リーク',why:'多くのプロキシは IPv4 しか扱いません。IPv6 対応サイトではローカルの IPv6 経路から直接出て、実際の回線事業者が露出します。プロキシをかけているのに止められる主な原因がこれです。',fix:'端末のネットワーク設定で IPv6 を切り、または v6 も通すグローバルモードを使ってください。'},
     '实时通信穿透':{n:'WebRTC リーク',why:'リアルタイム通話は接続のため端末のネットワークアドレスを探り、通常のプロキシでは止められません。見つかったアドレスが出口と違う場所なら、実際の居場所を伝えたことになります。',fix:'グローバルプロキシを使うか、システムでリアルタイム通信の権限を制限します。'},
     '时区与 IP 一致性':{n:'タイムゾーンと IP',why:'どちらか単独なら問題ありませんが、組み合わさると問題になります。タイムゾーンが北京で IP が東京なら、どちらか単独より明確な矛盾です。',fix:'タイムゾーンを出口に合わせるのが最も簡単で効果的です。'},
-    'Claude 服务连通':{n:'Claude への到達性',why:'接続できないのはプロキシ設定が anthropic のドメインを漏らしているためです。ブラウザは動くのにコマンドラインで 403 になるのは、出口が異なるためです。',fix:'分流ルールを確認し、anthropic.com、claude.ai、claudeusercontent.com を対象に含めてください。'}
+    'Claude 服务连通':{n:'Claude への到達性',why:'api.anthropic.com、claude.ai、claudeusercontent.com を個別に確認します。1 つ欠けるとログインはできるのにファイルが送れない等の不具合が出るため、分けて測ります。',fix:'分流ルールを確認し、anthropic.com、claude.ai、claudeusercontent.com を対象に含めてください。'}
   },
   r:{
     simLimited:(noPerm)=>`SIM はありますが、カード情報が制限されています${noPerm?'（電話権限が未許可）':''}`,
     simNone:'SIM カードがありません',
     simSlot:(n)=>`カード${n}`,
-    simCountry:(cc)=>CC_NAME[cc]||cc,
+    simCountry:(cc)=>ccName(cc),
     simEsim:'eSIM',
     simInactive:'圏外',
     simTail:(t)=>`下4桁 ${t}`,
@@ -837,7 +880,7 @@ const I18N = {
     dcOne:(t)=>`データセンター / プロキシの可能性（根拠 1 件）${t}`,
     residential:(t)=>`住宅 / 業務用回線、ホスティングやプロキシの兆候なし${t}`,
     unsure:(t)=>`確認できません（根拠不足、住宅とは判定しません）${t}`,
-    noV6:'利用可能な IPv6 出口がなく、迂回はありません',
+    noV6:'IPv6 出口は検出されず、迂回はありません',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`、IPv4（${v4}）と不一致`:'、IPv4 と一致'}`,
     rtcLimited:'検出チャネルを確立できません（制限の可能性）、結果は不確定',
     rtcPub:(ip,cc,bad)=>`公開アドレスを検出 ${ip}${cc?`（${cc}）`:''}${bad?'、出口地域と不一致':''}`,
@@ -847,6 +890,10 @@ const I18N = {
     tzVsIp:(cc)=>`UTC+8 と IP ${cc}、時空間の矛盾`,
     ipUnsup:(cc)=>`IP ${cc} は対応リストにありません。タイムゾーンは合っていますが地域自体が不合格です`,
     aligned:'タイムゾーンと IP 地域が一致',
+    tzOffMismatch:(off,exp)=>`${off}、しかしタイムゾーン名は UTC${exp>=0?'+':''}${exp} を指しており不一致`,
+    v6Unknown:'IPv6 出口の有無を確認できません（照会失敗）',
+    apiAllOk:'3 つのドメインすべて到達可能',
+    apiPartial:(ok,bad)=>`${bad.join('、')} に到達不可${ok.length?`（${ok.join('、')} は正常）`:''}`,
     apiOk:'api.anthropic.com に到達可能',
     apiFail:'api.anthropic.com に到達不可',
     err:'チェック異常、集計外',
@@ -1098,8 +1145,16 @@ const CHECKS=[
 }},
 
 {cat:'fp',key:'时区偏移',w:2,fn:()=>{
+  /* 时区名字和实际偏移是两个独立字段。只改名字不改偏移，就会出现
+     "名字写东京、时钟还走北京时间"的半改状态，这种矛盾比不改更显眼。 */
   const off=-new Date().getTimezoneOffset()/60;
-  return {p:off===8?4:10, v:'UTC'+(off>=0?'+':'')+off};
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  const exp=TZ_OFFSET[tz];
+  const label='UTC'+(off>=0?'+':'')+off;
+  if(exp!==undefined&&exp!==off){
+    return {p:2, v:R().tzOffMismatch(label,exp)};
+  }
+  return {p:off===8?4:10, v:label};
 }},
 
 {cat:'fp',key:'系统语言',w:5,fn:()=>{
@@ -1275,10 +1330,25 @@ const CHECKS=[
 }},
 
 {cat:'net',key:'IPv6 泄露',w:6,fn:async()=>{
-  let v6=null;
-  try{v6=await fetchJSON('https://api64.ipify.org?format=json').then(d=>d&&d.ip);}catch(e){}
-  if(!v6||!v6.includes(':')||v6===state.ip) return {p:10, v:R().noV6};
-  const g=await fetchJSON('https://ipwho.is/'+v6);
+  /* 必须区分两种情况：确实没有 IPv6 出口，和查询失败不知道。
+     前者可以给满分，后者不能假装没问题，否则就是假结论。 */
+  let v6=null, probed=false;
+  try{
+    const r=await netGet('https://api64.ipify.org?format=json');
+    if(r&&r.ip){ v6=r.ip; probed=true; }
+  }catch(e){}
+  /* api64 走的是原生请求，很可能优先用 IPv4 出去，这时返回的是 v4 地址，
+     不能据此断定"没有 IPv6 出口"。再用 WebRTC 候选地址补一次判断。 */
+  if(!v6||!v6.includes(':')){
+    const raw=await ensureRtc();
+    const cand=raw.map(x=>x.split('|')[0]).filter(i=>i.includes(':')&&!isPrivate(i));
+    if(cand.length) v6=cand[0];
+  }
+  /* 两种"没有 v6"要分开说：
+     查询成功但确实没探到 v6 → 可以给满分
+     查询本身失败 → 只能说无法确认，不能假装没问题 */
+  if(!v6) return probed?{p:10, v:R().noV6}:{p:7, v:R().v6Unknown};
+  const g=await netGet('https://ipwho.is/'+v6);
   let cc=g?(g.country_code||'').toUpperCase():'';
   // 隐藏规则：IPv6 的 /32 段直接标明了运营商，比地理位置更硬
   const P6=[['240e',R().opCT],['2408',R().opCU],['2409',R().opCM],
@@ -1293,7 +1363,7 @@ const CHECKS=[
 }},
 
 {cat:'net',key:'实时通信穿透',w:5,fn:async()=>{
-  const raw=await webrtcProbe();
+  const raw=await ensureRtc();
   const host=raw.filter(x=>x.endsWith('|host')).map(x=>x.split('|')[0]);
   const ips=raw.map(x=>x.split('|')[0]);
   if(!ips.length) return {p:9, v:R().rtcLimited};
@@ -1307,7 +1377,7 @@ const CHECKS=[
   }
   const first=pub[0];
   let cc='';
-  if(first.includes(':')){const g=await fetchJSON('https://ipwho.is/'+first);cc=g?(g.country_code||'').toUpperCase():'';}
+  if(first.includes(':')){const g=await netGet('https://ipwho.is/'+first);cc=g?(g.country_code||'').toUpperCase():'';}
   const bad=!!(cc&&state.cc&&cc!==state.cc);
   return {p:bad?2:8, v:R().rtcPub(first,cc,bad),
           veto:bad?R().rtcVeto(cc):null};
@@ -1325,14 +1395,25 @@ const CHECKS=[
 }},
 
 {cat:'net',key:'Claude 服务连通',w:1,fn:async()=>{
-  try{
-    const c=new AbortController(),tt=setTimeout(()=>c.abort(),7000);
-    await fetch('https://api.anthropic.com/v1/models',{signal:c.signal,mode:'no-cors'});
-    clearTimeout(tt);
-    return {p:10, v:R().apiOk};
-  }catch(e){
-    return {p:3, v:R().apiFail};
-  }
+  /* Claude 实际依赖三个域名，缺一个就会在某些功能上失败：
+     api.anthropic.com  对话与账号接口
+     claude.ai          网页版入口
+     claudeusercontent.com  附件与产物内容分发
+     只测其中一个会出现"能登录但传不了文件"这种误判。 */
+  const hosts=['api.anthropic.com','claude.ai','claudeusercontent.com'];
+  const probe=async(h)=>{
+    try{
+      const c=new AbortController(),tt=setTimeout(()=>c.abort(),6000);
+      await fetch('https://'+h+'/',{signal:c.signal,mode:'no-cors',cache:'no-store'});
+      clearTimeout(tt);
+      return true;
+    }catch(e){ return false; }
+  };
+  const rs=await Promise.all(hosts.map(probe));
+  const okList=hosts.filter((h,i)=>rs[i]);
+  const badList=hosts.filter((h,i)=>!rs[i]);
+  if(!badList.length) return {p:10, v:R().apiAllOk};
+  return {p:badList.length>=2?2:6, v:R().apiPartial(okList,badList)};
 }}
 ];
 
@@ -1345,6 +1426,12 @@ function earnedOf(w,p){ return +(w*p/10).toFixed(2); }
 const results=[];
 
 function isPrivate(ip){return /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|127\.|fd|fe80|169\.254\.)/.test(ip);}
+let rtcPromise=null;
+/* 多个检测项共用一次探测结果：IPv6 项也要用它判断本机有没有 v6 出口 */
+function ensureRtc(){
+  if(!rtcPromise) rtcPromise=webrtcProbe();
+  return rtcPromise;
+}
 function webrtcProbe(){
   return new Promise(res=>{
     const found=new Set();let done=false;
