@@ -2,9 +2,9 @@
 
 # Claude 環境チェック
 
-**Claude を開く前に、この端末が何を晒しているか確認する。**
+**プロキシを繋いでも、なぜ Claude は中国のユーザーと判定するのか？**
 
-21 項目 · 重み付き採点 · すべて端末内 · オープンソース
+21 項目の端末シグナルを読み、重み付きで採点するネイティブ Android アプリ。プロキシはそのうちの 1 項目にすぎません。
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#インストール)
@@ -12,11 +12,15 @@
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#プライバシー)
 
 <p align="center">
-  <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="繁體中文"></a>
-  <a href="README.en.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
   <a href="README.ja.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-d97757?style=flat-square" alt="日本語"></a>
 </p>
+
+<div align="center">
+<img src="docs/demo.gif" width="280" alt="デモ">
+</div>
 
 </div>
 
@@ -149,9 +153,8 @@ bash build.sh
 
 **[Waterseller](https://waterseller.cc)** — 自社運営の Claude 中継サービス
 
-> 現在 Claude の利用量が多く、一時停止中です。
+<sub>商業広告です。本プロジェクトとは提携関係にありません。</sub>
 
-<sub>商業広告です。Waterseller と本プロジェクトに提携関係はなく、そのサービスを保証するものではありません。</sub>
 
 ---
 

@@ -2,9 +2,9 @@
 
 # Claude 環境檢測
 
-**在打開 Claude 之前，先看一眼這台裝置乾不乾淨。**
+**掛了代理，Claude 為什麼還是把你當中國用戶？**
 
-21 項訊號 · 依權重計分 · 全程本機 · 開源
+一個原生 Android 應用，讀 21 項裝置訊號並依權重計分。代理只是其中一項。
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#安裝)
@@ -12,11 +12,15 @@
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#隱私)
 
 <p align="center">
-  <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-d97757?style=flat-square" alt="繁體中文"></a>
-  <a href="README.en.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
   <a href="README.ja.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-78716a?style=flat-square" alt="日本語"></a>
 </p>
+
+<div align="center">
+<img src="docs/demo.gif" width="280" alt="演示">
+</div>
 
 </div>
 
@@ -149,9 +153,8 @@ bash build.sh
 
 **[Waterseller](https://waterseller.cc)** · 自營 Claude 中轉站
 
-> 目前 Claude 呼叫量過大，暫時下架。
+<sub>商業推廣，與本工具無隸屬關係。</sub>
 
-<sub>商業推廣。Waterseller 與本工具無隸屬關係，不對其服務作任何擔保。</sub>
 
 ---
 

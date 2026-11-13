@@ -1,116 +1,120 @@
 <div align="center">
 
-# Claude 环境检测
+# Claude Environment Check
 
-**在打开 Claude 之前，先看一眼这台设备干不干净。**
+**Why does Claude still treat you as a mainland user after you enable a proxy?**
 
-21 项信号 · 按权重计分 · 全程本地 · 开源
+A native Android app that reads 21 device signals and weights them. The proxy is only one of them.
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#安装)
-[![Size](https://img.shields.io/badge/APK-69%20KB-78716a.svg)](#安装)
-[![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#隐私)
+[![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#install)
+[![Size](https://img.shields.io/badge/APK-69%20KB-78716a.svg)](#install)
+[![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#privacy)
 
 <p align="center">
-  <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-d97757?style=flat-square" alt="简体中文"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/English-d97757?style=flat-square" alt="English"></a>
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="繁體中文"></a>
-  <a href="README.en.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
   <a href="README.ja.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-78716a?style=flat-square" alt="日本語"></a>
 </p>
+
+<div align="center">
+<img src="docs/demo.gif" width="280" alt="demo">
+</div>
 
 </div>
 
 ---
 
-## 这是什么
+## What this is
 
-一个装在手机上的体检工具。它读一遍设备本身的信号，告诉你**这个环境更像一个普通海外用户，还是像一串被标记过的特征**。
+A diagnostic app for your phone. It reads the signals your device already emits and tells you whether this environment looks like **an ordinary user overseas**, or like **a set of fingerprints that have been flagged before**.
 
-和浏览器里跑的检测不同，这是个原生安卓应用。它能读到网页永远拿不到的东西：系统字体表里装了什么、SIM 卡归属哪个国家、是不是 eSIM、有没有开分身、系统是不是官方 ROM、VPN 是不是全局。
+Unlike a check that runs in a browser, this is a native Android app, so it reaches things a page never can: which fonts are installed in the system, which country the SIM belongs to, whether it is an eSIM, whether app cloning is in use, whether the ROM is official, whether the VPN is system-wide.
 
-查完给一个 100 分的评分和一句结论。分数本身不重要，重要的是**哪一项在拖后腿、为什么、怎么改**。
+You get a score out of 100 and one sentence of conclusion. The score itself is not the point. What matters is **which item is dragging you down, why, and how to fix it**.
 
-每项结果按「标签：值」逐条列出，不是一段话丢给你。同一项里的不同取值，用颜色区分正常、注意、异常——比如双卡手机，卡 1 会被标红，卡 2 标绿，一眼看出是哪张卡的问题。
+Each result is listed as labelled fields, not one blob of text. Values are colour-coded normal / note / problem, so on a dual-SIM phone card 1 turns red and card 2 green — you can see which card is the issue at a glance.
 
-读不到的东西不会被当成通过。认不出的 SIM、解析不出的地区，会明确标成「无法判定」并给中间分，不猜、不放行。
+Anything it cannot read is never counted as a pass. An unrecognised SIM or an unparseable region is labelled “cannot determine” and given a middle score — no guessing, no free pass.
 
 <br>
 
 <div align="center">
 <table>
 <tr>
-<td><img src="docs/screenshots/home-zh.png" width="215"></td><td><img src="docs/screenshots/scan-zh.png" width="215"></td><td><img src="docs/screenshots/result-zh.png" width="215"></td>
+<td><img src="docs/screenshots/home-en.png" width="215"></td><td><img src="docs/screenshots/scan-en.png" width="215"></td><td><img src="docs/screenshots/result-en.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">首页</td><td align="center">逐项检测</td><td align="center">评分与结论</td>
+<td align="center">Home</td><td align="center">Scanning</td><td align="center">Score</td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/detail-zh.png" width="215"></td><td><img src="docs/screenshots/sheet-zh.png" width="215"></td><td><img src="docs/screenshots/settings-zh.png" width="215"></td>
+<td><img src="docs/screenshots/detail-en.png" width="215"></td><td><img src="docs/screenshots/sheet-en.png" width="215"></td><td><img src="docs/screenshots/settings-en.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">各项明细</td><td align="center">单项详情</td><td align="center">设置</td>
+<td align="center">Breakdown</td><td align="center">Item detail</td><td align="center">Settings</td>
 </tr>
 </table>
 </div>
 
 ---
 
-## 它查什么
+## What it checks
 
-21 项，按对风控的真实分量分配分数。**同样的错，在不同的项上代价完全不同**。
+21 items, scored by how much each one actually weighs in risk decisions. **The same mistake costs wildly different amounts depending on the item.**
 
-| 权重 | 检测项 | 为什么这个权重 |
+| Weight | Item | Why this weight |
 |:---:|---|---|
-| **20** | IP 归属地 | 官方政策写死的硬门槛，一票否决 |
-| **13** | IP 类型与纯净度 | 机房与家宽待遇天差地别，且大量"家宽"是机房改名 |
-| 7 | 系统时区 | 物理位置最直接的旁证 |
-| 6 | IPv6 泄露 | 绕过隧道的真实出口 |
-| 5 | 实时通信穿透 / 时区与 IP 一致性 / 模拟器 / 系统语言 / SIM 与号码 | 单项不致命，叠加起来很重 |
-| 4 | 系统区域设置 / 中文字体栈 / 支付环境 | 画像的中层信号 |
-| 3 | Root / 厂商字体 / 多开分身 | 环境可信度 |
-| 2 | 中文语言变体 / 时区偏移 | 细节矛盾 |
-| 1 | 设备型号 / ROM 状态 / 代理隧道 / 服务连通 | 有信息量，但不该拖垮总分 |
+| **20** | IP location | A hard gate written into the policy; instant veto |
+| **13** | IP type and cleanliness | Datacenter and residential are treated nothing alike, and many "residential" proxies are datacenter IPs renamed |
+| 7 | System timezone | The most direct evidence of physical location |
+| 6 | IPv6 leak | A real exit that bypasses the tunnel |
+| 5 | WebRTC leak / timezone vs IP / emulator / system language / SIM | Not fatal alone, heavy when stacked |
+| 4 | System locale / CJK fonts / payment environment | Mid-layer profiling signals |
+| 3 | Root / vendor fonts / cloned apps | Environmental trust |
+| 2 | Chinese variant / timezone offset | Small contradictions |
+| 1 | Device model / ROM state / proxy tunnel / reachability | Informative, but should not sink the total |
 
-完整判定规则、隐藏规则和误判来源写在 **[docs/DETECTION.md](docs/DETECTION.md)**，包括每一项"什么算失败"。
+Full rules, hidden heuristics and known misjudgements live in **[docs/DETECTION.md](docs/DETECTION.md)** — including what counts as a failure for every item.
 
-### 五条一票否决
+### Five instant vetoes
 
-命中任何一条，结论直接是「请不要使用」，不看总分：
+Hit any one and the verdict is "do not use", regardless of score:
 
-- 系统时区为中国大陆时区
-- 出口 IP 位于官方不支持地区
-- IPv6 出口与 IPv4 地区不一致
-- 实时通信泄露了异地区公网地址
-- 运行在模拟器或云手机
+- System timezone is a mainland China timezone
+- Exit IP is in an unsupported region
+- IPv6 exit differs from the IPv4 region
+- WebRTC exposed a public address from another region
+- Running on an emulator or cloud phone
 
 ---
 
-## 一个例子
+## A small example
 
-同样是"扣分"，代价差 20 倍：
+Same "deduction", twenty times the cost:
 
 ```
-设备型号判错（国产机）      → 丢 1 分
-IP 落在不支持地区           → 丢 20 分，且直接否决
+Wrong device model (a Xiaomi phone)   → lose 1 point
+IP in an unsupported region           → lose 20 points, and get vetoed
 ```
 
-这也是为什么每项不是平均 10 分。早期版本每项 10 分，结果"型号是小米"和"人在大陆"扣一样多的分，那个分数没有意义。
+That is why items are not all worth 10. An early build scored every item out of 10, which meant "your phone is a Xiaomi" and "you are in mainland China" cost exactly the same. That number was meaningless.
 
 ---
 
-## 安装
+## Install
 
-**直接装 APK**
+**Install the APK**
 
-直接下载 **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（69 KB），允许安装未知来源即可。
+Download **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)** (69 KB) and allow installs from unknown sources.
 
-也可以到 [Releases](../../releases) 查看版本历史。
+Version history is on [Releases](../../releases).
 
 ---
 
-## 自己编译
+## Build it yourself
 
-不需要 Gradle，只要 Android SDK（build-tools + platform 34）和 JDK。
+No Gradle needed — just the Android SDK (build-tools + platform 34) and a JDK.
 
 ```bash
 git clone https://github.com/<your-name>/claude-doctor.git
@@ -118,53 +122,52 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-脚本会依次跑 `aapt2 compile → link → javac → d8 → zipalign → apksigner`，产出 69 KB 的 APK 并自动装到已连接的设备。
+The script runs `aapt2 compile → link → javac → d8 → zipalign → apksigner`, produces a 69 KB APK and installs it to any connected device.
 
-> 首次构建会在 `android/` 下生成 `keystore.jks`。这个文件是签名私钥，已在 `.gitignore` 里排除，**不要提交**。
-
----
-
-## 隐私
-
-- 所有判定在本机完成，结果不离开设备
-- 只有 IP 类检测会向情报接口发送你的**出口 IP**，这是查询本身的必要条件
-- 不发送设备标识、账号、位置、通讯录或任何其他数据
-- 没有统计、没有埋点、没有账号体系
-
-用到的外部接口和免费额度写在 [docs/DETECTION.md](docs/DETECTION.md#六外部接口与配额)。
+> The first build creates `android/keystore.jks`. That is your signing key, already excluded in `.gitignore`. **Do not commit it.**
 
 ---
 
-## 说明
+## Privacy
 
-这是一个**诊断工具**，不提供任何绕过地区限制的手段，也不修改任何系统设置——它只读取，然后告诉你现状。
+- Every decision happens on device; results never leave it
+- Only the IP checks contact external services, and they send your **exit IP** because the query cannot work without it
+- No device identifiers, no accounts, no location, no contacts
+- No analytics, no telemetry, no sign-up
 
-结果仅供参考，不代表 Anthropic 官方判断。实际风控是动态的、多维的，本工具给出的是基于公开政策与社区观察的风险画像。
-
-如果你在支持地区、用正常设备和家宽，本该拿高分；如果分数很低，说明环境确实存在可识别的矛盾，值得先处理再登录。
-
----
-
-## 赞助
-
-**[Waterseller](https://waterseller.cc)** · 自营 Claude 中转站
-
-> 目前 Claude 调用量过大，暂时下架。
-
-<sub>商业推广。Waterseller 与本工具无隶属关系，不对其服务作任何担保。</sub>
+External endpoints and their free quotas are listed in [docs/DETECTION.md](docs/DETECTION.md#六外部接口与配额).
 
 ---
 
-## 参与
+## Scope
 
-欢迎提 Issue 和 PR。特别欢迎这几类：
+This is a **diagnostic tool**. It does not provide any means of bypassing regional restrictions and it does not modify system settings — it reads, then reports.
 
-- **新的检测项**：尤其是只有原生环境能做到的（传感器一致性、GPU 型号、DNS 出口）
-- **误判反馈**：附上你的实测值和判断依据，这类反馈最有价值
-- **翻译**：目前有简中、繁中、英、日，其他语言欢迎补
-- **情报源**：找到不需要 key、额度友好的 IP 情报接口
+Results are indicative, not an official Anthropic assessment. Real risk decisions are dynamic and multi-dimensional; this tool produces a risk profile from public policy and community observation.
 
-代码风格没什么讲究，能跑、能说明白就行。检测逻辑集中在 `app/index.html` 的 `CHECKS` 数组里，加一项就是加一个对象。
+If you are in a supported region on a normal device and home broadband, you should score high. If you score low, the environment really does contain contradictions worth fixing before signing in.
+
+---
+
+## Sponsor
+
+**[Waterseller](https://waterseller.cc)** — self-operated Claude relay
+
+<sub>Paid promotion. Not affiliated with this project.</sub>
+
+
+---
+
+## Contributing
+
+Issues and PRs welcome. Especially:
+
+- **New checks** — particularly native-only ones (sensor consistency, GPU model, DNS egress)
+- **False positive reports** — include your measured values and reasoning; these are the most valuable
+- **Translations** — currently zh-CN, zh-TW, en, ja
+- **Intelligence sources** — keyless, quota-friendly IP APIs
+
+No style guide. Working code that explains itself is enough. Detection logic lives in the `CHECKS` array inside `app/index.html`; adding a check means adding an object.
 
 ---
 
@@ -173,5 +176,5 @@ bash build.sh
 [MIT](LICENSE)
 
 <div align="center">
-<sub>本地跑，不上传。查完记得改时区。</sub>
+<sub>Runs locally. Uploads nothing. Go fix your timezone.</sub>
 </div>

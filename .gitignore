@@ -21,6 +21,7 @@ Thumbs.db
 
 # 本地临时文件
 _t_*.html
+/_*
 _*.py
 _msg.txt
 _s_*.html
