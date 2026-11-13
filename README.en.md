@@ -25,6 +25,8 @@ Unlike a web-based check, this is a native Android app, so it reaches things a p
 
 You get a score out of 100 and one sentence of conclusion. The score itself is not the point. What matters is **which item is dragging you down, why, and how to fix it**.
 
+Each result is listed as labelled fields, not one blob of text. Values are colour-coded normal / note / problem, so on a dual-SIM phone card 1 turns red and card 2 green — you can see which card is the issue at a glance.
+
 <br>
 
 <div align="center">
