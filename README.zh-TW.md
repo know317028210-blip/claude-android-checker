@@ -149,13 +149,9 @@ bash build.sh
 
 ---
 
-## 贊助
+## 自營中轉站
 
-**[Waterseller](https://waterseller.cc)** · 自營 Claude 中轉站
-
-<sub>商業推廣，與本工具無隸屬關係。</sub>
-
-
+**[Waterseller](https://waterseller.cc)** · 自營 Claude 中轉站，保質保量
 ---
 
 ## 參與

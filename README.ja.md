@@ -149,13 +149,9 @@ bash build.sh
 
 ---
 
-## スポンサー
+## 自社運営リレー
 
-**[Waterseller](https://waterseller.cc)** — 自社運営の Claude 中継サービス
-
-<sub>商業広告です。本プロジェクトとは提携関係にありません。</sub>
-
-
+**[Waterseller](https://waterseller.cc)** — 自社運営の Claude 中継サービス、品質保証
 ---
 
 ## コントリビュート

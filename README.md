@@ -149,13 +149,9 @@ If you are in a supported region on a normal device and home broadband, you shou
 
 ---
 
-## Sponsor
+## Self-hosted relay
 
-**[Waterseller](https://waterseller.cc)** — self-operated Claude relay
-
-<sub>Paid promotion. Not affiliated with this project.</sub>
-
-
+**[Waterseller](https://waterseller.cc)** — self-operated Claude relay, quality guaranteed
 ---
 
 ## Contributing
