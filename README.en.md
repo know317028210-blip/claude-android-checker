@@ -145,6 +145,16 @@ If you are in a supported region on a normal device and home broadband, you shou
 
 ---
 
+## Sponsor
+
+**[Waterseller](https://waterseller.cc)** — self-operated Claude relay
+
+> Temporarily offline — Claude call volume is too high right now.
+
+<sub>Paid promotion. Waterseller is not affiliated with this project, and no guarantee is made about its service.</sub>
+
+---
+
 ## Contributing
 
 Issues and PRs welcome. Especially:

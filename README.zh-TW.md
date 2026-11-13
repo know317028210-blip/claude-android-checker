@@ -145,6 +145,16 @@ bash build.sh
 
 ---
 
+## 贊助
+
+**[Waterseller](https://waterseller.cc)** · 自營 Claude 中轉站
+
+> 目前 Claude 呼叫量過大，暫時下架。
+
+<sub>商業推廣。Waterseller 與本工具無隸屬關係，不對其服務作任何擔保。</sub>
+
+---
+
 ## 參與
 
 歡迎提 Issue 和 PR。特別歡迎這幾類：

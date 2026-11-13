@@ -145,6 +145,16 @@ bash build.sh
 
 ---
 
+## スポンサー
+
+**[Waterseller](https://waterseller.cc)** — 自社運営の Claude 中継サービス
+
+> 現在 Claude の利用量が多く、一時停止中です。
+
+<sub>商業広告です。Waterseller と本プロジェクトに提携関係はなく、そのサービスを保証するものではありません。</sub>
+
+---
+
 ## コントリビュート
 
 Issue と PR を歓迎します。特に歓迎するのは：
