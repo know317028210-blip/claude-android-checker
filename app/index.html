@@ -79,6 +79,8 @@ body{background:var(--bg);color:var(--ink);
   .hero-line{animation:none!important;width:52px!important}
   .view{transition:none!important}
   .row.new{animation:none!important}
+  /* 分数环的过渡也要关掉，否则数值变了但环还停在起点 */
+  .dial .fgc{transition:none!important}
 }
 
 .home-foot{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 18px);left:0;right:0;text-align:center;
