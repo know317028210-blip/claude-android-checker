@@ -8,10 +8,15 @@
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#インストール)
-[![Size](https://img.shields.io/badge/APK-65%20KB-78716a.svg)](#インストール)
+[![Size](https://img.shields.io/badge/APK-69%20KB-78716a.svg)](#インストール)
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#プライバシー)
 
-[简体中文](README.md) · [繁體中文](README.zh-TW.md) · [English](README.en.md) · **日本語**
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
+  <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="繁體中文"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-d97757?style=flat-square" alt="日本語"></a>
+</p>
 
 </div>
 
@@ -34,28 +39,16 @@ Web 版のチェックと違い、これはネイティブの Android アプリ�
 <div align="center">
 <table>
 <tr>
-<td><img src="docs/screenshots/01-home-zh.png" width="200"></td>
-<td><img src="docs/screenshots/02-scan-zh.png" width="200"></td>
-<td><img src="docs/screenshots/03-result-zh.png" width="200"></td>
-<td><img src="docs/screenshots/04-detail-zh.png" width="200"></td>
+<td><img src="docs/screenshots/home-ja.png" width="215"></td><td><img src="docs/screenshots/scan-ja.png" width="215"></td><td><img src="docs/screenshots/result-ja.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">ホーム</td>
-<td align="center">チェック中</td>
-<td align="center">スコア</td>
-<td align="center">項目一覧</td>
+<td align="center">ホーム</td><td align="center">項目ごとの検出</td><td align="center">スコアと判定</td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/05-sheet-zh.png" width="200"></td>
-<td><img src="docs/screenshots/06-settings-zh.png" width="200"></td>
-<td><img src="docs/screenshots/07-home-en.png" width="200"></td>
-<td><img src="docs/screenshots/09-home-ja.png" width="200"></td>
+<td><img src="docs/screenshots/detail-ja.png" width="215"></td><td><img src="docs/screenshots/sheet-ja.png" width="215"></td><td><img src="docs/screenshots/settings-ja.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">項目の詳細</td>
-<td align="center">API と言語</td>
-<td align="center">English</td>
-<td align="center">日本語</td>
+<td align="center">明細</td><td align="center">項目の詳細</td><td align="center">設定</td>
 </tr>
 </table>
 </div>
@@ -109,7 +102,7 @@ IP が非対応地域                    → 20 点減、しかも即時否決
 
 **方法 1：APK**
 
-**[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（65 KB）を直接ダウンロードし、提供元不明アプリのインストールを許可してください。
+**[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（69 KB）を直接ダウンロードし、提供元不明アプリのインストールを許可してください。
 
 バージョン履歴は [Releases](../../releases) にあります。
 
@@ -120,12 +113,14 @@ IP が非対応地域                    → 20 点減、しかも即時否決
 **方法 3：デスクトップ**
 
 ```bash
-# Windows
-desktop/doctor-lite/ClaudeDoctorLite.exe
-
 # macOS / Linux
 bash desktop/claude-env-check.sh
+
+# Windows（Go 1.21 以降が必要）
+cd desktop/doctor-lite && go build -o ClaudeDoctorLite.exe . && ./ClaudeDoctorLite.exe
 ```
+
+デスクトップ版はコマンドライン環境（Claude Code 向け）を調べるもので、スマホアプリとは別物です。
 
 ---
 
@@ -139,7 +134,7 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-`aapt2 compile → link → javac → d8 → zipalign → apksigner` を順に実行し、65 KB の APK を作って接続中の端末にインストールします。
+`aapt2 compile → link → javac → d8 → zipalign → apksigner` を順に実行し、69 KB の APK を作って接続中の端末にインストールします。
 
 > 初回ビルドで `android/keystore.jks` が生成されます。署名鍵なので `.gitignore` で除外済みです。**コミットしないでください。**
 

@@ -415,7 +415,6 @@ function detectLang(){
   }catch(e){ return 'zh-CN'; }
 }
 let LANG = detectLang();
-console.log('[LANG] nav='+((navigator.languages||[]).join(','))+' | '+navigator.language+' → '+LANG);
 
 const I18N = {
 'zh-CN':{

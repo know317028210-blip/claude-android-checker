@@ -8,10 +8,15 @@
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#安裝)
-[![Size](https://img.shields.io/badge/APK-65%20KB-78716a.svg)](#安裝)
+[![Size](https://img.shields.io/badge/APK-69%20KB-78716a.svg)](#安裝)
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#隱私)
 
-[简体中文](README.md) · **繁體中文** · [English](README.en.md) · [日本語](README.ja.md)
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
+  <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-d97757?style=flat-square" alt="繁體中文"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/English-78716a?style=flat-square" alt="English"></a>
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-78716a?style=flat-square" alt="日本語"></a>
+</p>
 
 </div>
 
@@ -34,28 +39,16 @@
 <div align="center">
 <table>
 <tr>
-<td><img src="docs/screenshots/01-home-zh.png" width="200"></td>
-<td><img src="docs/screenshots/02-scan-zh.png" width="200"></td>
-<td><img src="docs/screenshots/03-result-zh.png" width="200"></td>
-<td><img src="docs/screenshots/04-detail-zh.png" width="200"></td>
+<td><img src="docs/screenshots/home-tw.png" width="215"></td><td><img src="docs/screenshots/scan-tw.png" width="215"></td><td><img src="docs/screenshots/result-tw.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">首頁</td>
-<td align="center">逐項檢測</td>
-<td align="center">評分與結論</td>
-<td align="center">各項明細</td>
+<td align="center">首頁</td><td align="center">逐項檢測</td><td align="center">評分與結論</td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/05-sheet-zh.png" width="200"></td>
-<td><img src="docs/screenshots/06-settings-zh.png" width="200"></td>
-<td><img src="docs/screenshots/07-home-en.png" width="200"></td>
-<td><img src="docs/screenshots/09-home-ja.png" width="200"></td>
+<td><img src="docs/screenshots/detail-tw.png" width="215"></td><td><img src="docs/screenshots/sheet-tw.png" width="215"></td><td><img src="docs/screenshots/settings-tw.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">單項詳情</td>
-<td align="center">介面與語言設定</td>
-<td align="center">English</td>
-<td align="center">日本語</td>
+<td align="center">各項明細</td><td align="center">單項詳情</td><td align="center">設定</td>
 </tr>
 </table>
 </div>
@@ -109,7 +102,7 @@ IP 落在不支援地區             → 丟 20 分，且直接否決
 
 **方式一：直接裝 APK**
 
-直接下載 **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（65 KB），允許安裝未知來源即可。
+直接下載 **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（69 KB），允許安裝未知來源即可。
 
 也可以到 [Releases](../../releases) 查看版本歷史。
 
@@ -120,12 +113,14 @@ IP 落在不支援地區             → 丟 20 分，且直接否決
 **方式三：電腦端**
 
 ```bash
-# Windows
-desktop/doctor-lite/ClaudeDoctorLite.exe
-
 # macOS / Linux
 bash desktop/claude-env-check.sh
+
+# Windows（需要 Go 1.21+）
+cd desktop/doctor-lite && go build -o ClaudeDoctorLite.exe . && ./ClaudeDoctorLite.exe
 ```
+
+桌面版查的是命令列環境（Claude Code 相關），和手機 App 查的不是一回事，按需要選用。
 
 ---
 
@@ -139,7 +134,7 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-腳本會依序執行 `aapt2 compile → link → javac → d8 → zipalign → apksigner`，產出 65 KB 的 APK 並自動裝到已連接的裝置。
+腳本會依序執行 `aapt2 compile → link → javac → d8 → zipalign → apksigner`，產出 69 KB 的 APK 並自動裝到已連接的裝置。
 
 > 首次建置會在 `android/` 下產生 `keystore.jks`。這個檔案是簽章私鑰，已在 `.gitignore` 排除，**不要提交**。
 

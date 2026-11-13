@@ -8,10 +8,15 @@
 
 [![License](https://img.shields.io/badge/license-MIT-d97757.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3a9e6b.svg)](#install)
-[![Size](https://img.shields.io/badge/APK-65%20KB-78716a.svg)](#install)
+[![Size](https://img.shields.io/badge/APK-69%20KB-78716a.svg)](#install)
 [![No Tracking](https://img.shields.io/badge/telemetry-none-3a9e6b.svg)](#privacy)
 
-[简体中文](README.md) · [繁體中文](README.zh-TW.md) · **English** · [日本語](README.ja.md)
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="简体中文"></a>
+  <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-78716a?style=flat-square" alt="繁體中文"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/English-d97757?style=flat-square" alt="English"></a>
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-78716a?style=flat-square" alt="日本語"></a>
+</p>
 
 </div>
 
@@ -34,28 +39,16 @@ Anything it cannot read is never counted as a pass. An unrecognised SIM or an un
 <div align="center">
 <table>
 <tr>
-<td><img src="docs/screenshots/01-home-zh.png" width="200"></td>
-<td><img src="docs/screenshots/02-scan-zh.png" width="200"></td>
-<td><img src="docs/screenshots/03-result-zh.png" width="200"></td>
-<td><img src="docs/screenshots/04-detail-zh.png" width="200"></td>
+<td><img src="docs/screenshots/home-en.png" width="215"></td><td><img src="docs/screenshots/scan-en.png" width="215"></td><td><img src="docs/screenshots/result-en.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">Home</td>
-<td align="center">Checking</td>
-<td align="center">Score</td>
-<td align="center">All checks</td>
+<td align="center">Home</td><td align="center">Scanning</td><td align="center">Score</td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/05-sheet-zh.png" width="200"></td>
-<td><img src="docs/screenshots/06-settings-zh.png" width="200"></td>
-<td><img src="docs/screenshots/07-home-en.png" width="200"></td>
-<td><img src="docs/screenshots/09-home-ja.png" width="200"></td>
+<td><img src="docs/screenshots/detail-en.png" width="215"></td><td><img src="docs/screenshots/sheet-en.png" width="215"></td><td><img src="docs/screenshots/settings-en.png" width="215"></td>
 </tr>
 <tr>
-<td align="center">Item detail</td>
-<td align="center">API & language</td>
-<td align="center">English</td>
-<td align="center">日本語</td>
+<td align="center">Breakdown</td><td align="center">Item detail</td><td align="center">Settings</td>
 </tr>
 </table>
 </div>
@@ -109,7 +102,7 @@ That is why items are not all worth 10. An early build scored every item out of 
 
 **Option 1: APK**
 
-Download **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)** (65 KB) and allow installs from unknown sources.
+Download **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)** (69 KB) and allow installs from unknown sources.
 
 Version history is on [Releases](../../releases).
 
@@ -120,12 +113,14 @@ Open `app/index.html` in a browser. It cannot read the font table, SIM country, 
 **Option 3: Desktop**
 
 ```bash
-# Windows
-desktop/doctor-lite/ClaudeDoctorLite.exe
-
 # macOS / Linux
 bash desktop/claude-env-check.sh
+
+# Windows (requires Go 1.21+)
+cd desktop/doctor-lite && go build -o ClaudeDoctorLite.exe . && ./ClaudeDoctorLite.exe
 ```
+
+The desktop script checks your command-line environment for Claude Code — a different thing from what the phone app checks. Use whichever fits.
 
 ---
 
@@ -139,7 +134,7 @@ cd claude-doctor/android
 bash build.sh
 ```
 
-The script runs `aapt2 compile → link → javac → d8 → zipalign → apksigner`, produces a 65 KB APK and installs it to any connected device.
+The script runs `aapt2 compile → link → javac → d8 → zipalign → apksigner`, produces a 69 KB APK and installs it to any connected device.
 
 > The first build creates `android/keystore.jks`. That is your signing key, already excluded in `.gitignore`. **Do not commit it.**
 
