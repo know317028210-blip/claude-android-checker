@@ -517,6 +517,7 @@ const I18N = {
     unsure:(t)=>`无法确认（证据不足，不认定为住宅）${t}`,
     noV6:'未探测到 IPv6 出口，不存在绕过',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，与 IPv4（${v4}）不一致`:'，与 IPv4 一致'}`,
+    rtcNoCand:'WebRTC 未返回地址',
     rtcLimited:'未能建立探测通道（可能被系统限制），结果不确定',
     rtcPub:(ip,cc,bad)=>`探测到公网地址 ${ip}${cc?`（${cc}）`:''}${bad?'，与出口地区不一致':''}`,
     rtcLeakV6:(cc)=>`IPv6 流量绕过隧道，真实出口暴露为 ${cc}`,
@@ -580,6 +581,8 @@ const I18N = {
     sReach:'可达', sUnreach:'不可达', sInstalled:'已安装',
     regionUnknown:(mcc)=>`未知地区（MCC ${mcc}）`,
     vRegionUnknown:'无法判定（地区未识别）',
+    vCannotJudge:'无法判定（数据未读到）',
+    vNoNetwork:'设备当前没有网络，无法判断',
     yes:'有', no:'无',
     unk:'未知'
   }
@@ -682,6 +685,7 @@ const I18N = {
     unsure:(t)=>`無法確認（證據不足，不認定為住宅）${t}`,
     noV6:'未偵測到 IPv6 出口，不存在繞過',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`，與 IPv4（${v4}）不一致`:'，與 IPv4 一致'}`,
+    rtcNoCand:'WebRTC 未回傳位址',
     rtcLimited:'未能建立探測通道（可能被系統限制），結果不確定',
     rtcPub:(ip,cc,bad)=>`探測到公網地址 ${ip}${cc?`（${cc}）`:''}${bad?'，與出口地區不一致':''}`,
     rtcLeakV6:(cc)=>`IPv6 流量繞過隧道，真實出口暴露為 ${cc}`,
@@ -745,6 +749,8 @@ const I18N = {
     sReach:'可達', sUnreach:'不可達', sInstalled:'已安裝',
     regionUnknown:(mcc)=>`未知地區（MCC ${mcc}）`,
     vRegionUnknown:'無法判定（地區未識別）',
+    vCannotJudge:'無法判定（資料未讀到）',
+    vNoNetwork:'裝置目前沒有網路，無法判斷',
     yes:'有', no:'無',
     unk:'未知'
   }
@@ -847,6 +853,7 @@ const I18N = {
     unsure:(t)=>`Unconfirmed (insufficient evidence, not classified as residential)${t}`,
     noV6:'No IPv6 exit detected, nothing to bypass',
     v6Is:(cc,owner,leak,v4)=>`IPv6 exit ${cc}${owner}${leak?`, differs from IPv4 (${v4})`:', same as IPv4'}`,
+    rtcNoCand:'WebRTC returned no address',
     rtcLimited:'Probe channel could not be established (possibly restricted), result uncertain',
     rtcPub:(ip,cc,bad)=>`Public address detected ${ip}${cc?` (${cc})`:''}${bad?', differs from exit region':''}`,
     rtcLeakV6:(cc)=>`IPv6 bypasses the tunnel, real exit exposed as ${cc}`,
@@ -910,6 +917,8 @@ const I18N = {
     sReach:'reachable', sUnreach:'unreachable', sInstalled:'installed',
     regionUnknown:(mcc)=>`Unknown region (MCC ${mcc})`,
     vRegionUnknown:'cannot determine (region unrecognised)',
+    vCannotJudge:'cannot determine (data unreadable)',
+    vNoNetwork:'device is offline, cannot determine',
     yes:'yes', no:'none',
     unk:'unknown'
   }
@@ -1012,6 +1021,7 @@ const I18N = {
     unsure:(t)=>`確認できません（根拠不足、住宅とは判定しません）${t}`,
     noV6:'IPv6 出口は検出されず、迂回はありません',
     v6Is:(cc,owner,leak,v4)=>`IPv6 出口 ${cc}${owner}${leak?`、IPv4（${v4}）と不一致`:'、IPv4 と一致'}`,
+    rtcNoCand:'WebRTC がアドレスを返さず',
     rtcLimited:'検出チャネルを確立できません（制限の可能性）、結果は不確定',
     rtcPub:(ip,cc,bad)=>`公開アドレスを検出 ${ip}${cc?`（${cc}）`:''}${bad?'、出口地域と不一致':''}`,
     rtcLeakV6:(cc)=>`IPv6 がトンネルを迂回し、実際の出口が ${cc} として露出`,
@@ -1075,6 +1085,8 @@ const I18N = {
     sReach:'到達可', sUnreach:'到達不可', sInstalled:'導入済み',
     regionUnknown:(mcc)=>`不明な地域（MCC ${mcc}）`,
     vRegionUnknown:'判定できません（地域を識別できず）',
+    vCannotJudge:'判定できません（データ未取得）',
+    vNoNetwork:'端末がオフラインのため判定できません',
     yes:'あり', no:'なし',
     unk:'不明'
   }
@@ -1271,6 +1283,7 @@ const CHECKS=[
 {cat:'fp',key:'系统时区',w:7,fn:async()=>{
   await ensureIntel();
   const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  if(!tz) return NA([F(L().lb.tz, R().vCannotJudge, 'warn')]);
   const cn=CN_TZ.includes(tz), terr=TERR_TZ.includes(tz);
   const ipTz=state.ipTz||'';
   const mism=!!(ipTz&&tz&&ipTz!==tz);
@@ -1288,6 +1301,8 @@ const CHECKS=[
   const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
   const exp=TZ_OFFSET[tz];
   const label='UTC'+(off>=0?'+':'')+off;
+  /* 没有时区名就无法比对一致性，只能如实说判不了 */
+  if(!tz) return NA([F(L().lb.offset, label, 'warn')]);
   const bad=exp!==undefined&&exp!==off;
   const f=[F(L().lb.offset, label, bad?'bad':off===8?'warn':'ok')];
   if(exp!==undefined) f.push(F(L().lb.expected, 'UTC'+(exp>=0?'+':'')+exp, bad?'bad':'ok'));
@@ -1299,6 +1314,7 @@ const CHECKS=[
   /* 注意：局部变量不能叫 L，会遮蔽语言包函数 L() */
   const langs=navigator.languages&&navigator.languages.length?[...navigator.languages]:[navigator.language];
   const first=langs[0]||'', f0=first.toLowerCase();
+  if(!first) return NA([F(L().lb.primaryLang, R().vCannotJudge, 'warn')]);
   const zhCn=/^zh-cn|zh-hans|^zh$/.test(f0), zhOther=/^zh/.test(f0);
   return {p:zhCn?3:zhOther?6:10, v:[
     F(L().lb.primaryLang, first||'-', zhCn?'bad':zhOther?'warn':'ok'),
@@ -1308,6 +1324,7 @@ const CHECKS=[
 
 {cat:'fp',key:'中文语言变体',w:2,fn:()=>{
   const langs=navigator.languages||[];
+  if(!langs.length) return NA([F(L().lb.variant, R().vCannotJudge, 'warn')]);
   const tc=langs.some(l=>/zh-(tw|hk|mo)|zh-hant/i.test(l));
   const sc=langs.some(l=>/zh-cn|zh-sg|zh-hans|^zh/i.test(l));
   const v=tc?R().variantTC:sc?R().variantSC:null;
@@ -1317,6 +1334,7 @@ const CHECKS=[
 
 {cat:'fp',key:'系统区域设置',w:4,fn:()=>{
   const loc=Intl.DateTimeFormat().resolvedOptions().locale||'';
+  if(!loc) return NA([F(L().lb.locale, R().vCannotJudge, 'warn')]);
   const zhCn=/zh-cn|zh-hans|^zh$/i.test(loc), zhOther=/^zh/i.test(loc);
   return {p:zhCn?3:zhOther?6:10, v:[
     F(L().lb.locale, loc||R().tzUnknown, zhCn?'bad':zhOther?'warn':'ok')
@@ -1326,7 +1344,9 @@ const CHECKS=[
 {cat:'fp',key:'中文字体栈',w:4,fn:()=>{
   const names=['NotoSansCJK','NotoSerifCJK','NotoSansSC','SourceHanSans','DroidSansFallback',
                'MiSans','HYQiHei','FZLanTing','PingFang','Microsoft YaHei'];
-  const hit=SYSFONTS&&SYSFONTS.length?names.filter(sysHas):[];
+  /* 字体表读不到时，"没找到中文字体"是假结论——必须区分 */
+  if(!(SYSFONTS&&SYSFONTS.length)) return NA([F(L().lb.fonts, R().vCannotJudge, 'warn')]);
+  const hit=names.filter(sysHas);
   const vendor=['MiSans','HarmonyOS','OPPO Sans','vivo Sans','Honor Sans','PuHuiTi'].some(sysHas);
   let p=10;
   if(vendor&&hit.length>=2) p=2;
@@ -1339,6 +1359,7 @@ const CHECKS=[
 }},
 
 {cat:'fp',key:'厂商预装字体',w:3,fn:()=>{
+  if(!(SYSFONTS&&SYSFONTS.length)) return NA([F(L().lb.vendorFonts, R().vCannotJudge, 'warn')]);
   const names=['MiSans','HarmonyOS Sans','HarmonyOS','OPPO Sans','OPlus','vivo Sans','VivoFont','Honor Sans','HONORSans','PuHuiTi','FZLanTingHeiS'];
   const v=names.filter(sysHas);
   return {p:v.length>=2?2:v.length===1?6:10, v:[
@@ -1353,11 +1374,12 @@ const CHECKS=[
   if(!slots.length){
     const st=s.simState||'';
     const noPerm=s.phonePermission===false;
-    const absent=/ABSENT|NOT_READY|UNKNOWN/i.test(st)||!st;
-    if(!absent&&(st.indexOf('READY')>=0||st.indexOf('PIN')>=0||st.indexOf('PUK')>=0)){
-      return {p:8, v:[F(L().lb.simCard(1), R().simLimited(noPerm), 'warn')]};
-    }
-    return {p:10, v:[F(L().lb.simCard(1), R().simNone, 'ok')]};
+    /* 三种情况必须分开：真的没插卡 / 有卡但明细读不到 / 根本没读到 SIM 信息。
+       最后一种报"没有插卡"是假结论。 */
+    if(!SIM||!st) return NA([F(L().lb.simCard(1), R().vCannotJudge, 'warn')]);
+    if(/ABSENT|NOT_READY/i.test(st)) return {p:10, v:[F(L().lb.simCard(1), R().simNone, 'ok')]};
+    if(/READY|PIN|PUK/i.test(st)) return {p:8, v:[F(L().lb.simCard(1), R().simLimited(noPerm), 'warn')]};
+    return NA([F(L().lb.simCard(1), R().vCannotJudge, 'warn')]);
   }
   /* 逐卡判定，每张卡只有三种结论：支持 / 不支持 / 未知。
      未知不等于通过：读不到 MCC、MCC 不在表里、国家码不合法，都算未知，
@@ -1409,7 +1431,7 @@ const CHECKS=[
 }},
 
 {cat:'dev',key:'设备型号',w:1,fn:()=>{
-  if(!(NATIVE&&NATIVE.brand)) return {p:8, v:[F(L().lb.model, R().noDeviceInfo, 'warn')]};
+  if(!(NATIVE&&NATIVE.brand)) return NA([F(L().lb.model, R().noDeviceInfo, 'warn')]);
   const b=(NATIVE.brand+' '+NATIVE.manufacturer).toLowerCase();
   const cnList=['huawei','honor','xiaomi','redmi','poco','oppo','vivo','iqoo','realme','oneplus','meizu','lenovo','zte','nubia','harmony'];
   const d=cnList.find(k=>b.includes(k));
@@ -1421,14 +1443,14 @@ const CHECKS=[
 }},
 
 {cat:'dev',key:'Root / 框架',w:3,fn:()=>{
-  if(!INTEG) return {p:8, v:[F(L().lb.root, R().noSysInfo, 'warn')]};
+  if(!INTEG) return NA([F(L().lb.root, R().noSysInfo, 'warn')]);
   const f=[F(L().lb.root, INTEG.root?L().lb.sBad:L().lb.sOk, INTEG.root?'bad':'ok')];
   if(INTEG.root) f.push(F(L().lb.evidence, INTEG.rootEvidence||R().sysAbnormal, 'bad'));
   return {p:INTEG.root?3:10, v:f};
 }},
 
 {cat:'dev',key:'模拟器检测',w:5,fn:()=>{
-  if(!INTEG) return {p:8, v:[F(L().lb.verdict, R().noSysInfo, 'warn')]};
+  if(!INTEG) return NA([F(L().lb.verdict, R().noSysInfo, 'warn')]);
   const f=[F(L().lb.verdict, INTEG.emulator?R().emuReal:R().emuReal, 'ok')];
   f[0]=F(L().lb.verdict, INTEG.emulator?L().lb.sBad:R().emuReal, INTEG.emulator?'bad':'ok');
   if(INTEG.emulator) f.push(F(L().lb.evidence, INTEG.emuEvidence||R().buildAbnormal, 'bad'));
@@ -1436,7 +1458,7 @@ const CHECKS=[
 }},
 
 {cat:'dev',key:'系统 ROM 状态',w:1,fn:()=>{
-  if(!INTEG) return {p:8, v:[F(L().lb.rom, R().noSysInfo, 'warn')]};
+  if(!INTEG) return NA([F(L().lb.rom, R().noSysInfo, 'warn')]);
   const f=[F(L().lb.rom, INTEG.officialRom?R().romOfficial:R().romUnofficial(INTEG.tags,INTEG.buildType),
              INTEG.officialRom?'ok':'warn')];
   if(INTEG.patch) f.push(F(L().lb.patch, INTEG.patch, 'plain'));
@@ -1445,7 +1467,7 @@ const CHECKS=[
 
 {cat:'dev',key:'支付环境',w:4,fn:()=>{
   const a=APPS||{};
-  if(!a.found) return {p:8, v:[F(L().lb.installSrc, R().noAppInfo, 'warn')]};
+  if(!a.found) return NA([F(L().lb.installSrc, R().noAppInfo, 'warn')]);
   const inst=a.installer||'', gms=!!a.gms;
   const pays=(a.payApps||[]).map(x=>String(x));
   let p=10, label='', lv='ok';
@@ -1459,7 +1481,7 @@ const CHECKS=[
 
 {cat:'dev',key:'多开与分身',w:3,fn:()=>{
   const a=APPS||{};
-  if(!a.found) return {p:8, v:[F(L().lb.container, R().noAppInfo2, 'warn')]};
+  if(!a.found) return NA([F(L().lb.container, R().noAppInfo2, 'warn')]);
   const par=(a.parallel||[]).map(x=>String(x));
   const prof=Number(a.profiles||1);
   const f=[];
@@ -1471,7 +1493,7 @@ const CHECKS=[
 }},
 
 {cat:'dev',key:'代理隧道状态',w:1,fn:()=>{
-  if(!INTEG) return {p:8, v:[F(L().lb.vpn, R().noNetState, 'warn')]};
+  if(!INTEG) return NA([F(L().lb.vpn, R().noNetState, 'warn')]);
   return {p:INTEG.vpn?10:6, v:[
     F(L().lb.vpn, INTEG.vpn?(INTEG.vpnType||R().vpnDefault):R().vpnOff, INTEG.vpn?'ok':'warn')
   ]};
@@ -1502,7 +1524,7 @@ const CHECKS=[
 }},
 
 {cat:'net',key:'IP 类型与纯净度',w:13,fn:async()=>{
-  if(!state.intelReady) return {p:6, v:[F(L().lb.lineType, R().intelDown, 'warn')]};
+  if(!state.intelReady) return NA([F(L().lb.lineType, R().intelDown, 'warn')]);
   const dc=state.dcVotes||0;
   const ev=(state.evidence||[]).slice(0,3);
   const f=[];
@@ -1510,7 +1532,7 @@ const CHECKS=[
   if(dc>=2){ p=1; verdict=R().vDatacenter; lv='bad'; }
   else if(dc===1){ p=3; verdict=R().vMaybeDc; lv='warn'; }
   else if((state.resVotes||0)>=2){ p=10; verdict=R().vResidential; lv='ok'; }
-  else { p=6; verdict=R().vUnknown; lv='warn'; }
+  else { p=5; verdict=R().vUnknown; lv='warn'; }
   f.push(F(L().lb.lineType, verdict, lv));
   if(state.asn) f.push(F('ASN', state.asn+(state.asname?(' · '+state.asname):''), 'plain'));
   if(state.reverse) f.push(F(L().lb.evidence, state.reverse, 'plain'));
@@ -1531,9 +1553,9 @@ const CHECKS=[
     if(cand.length) v6=cand[0];
   }
   if(!v6){
-    return probed
-      ? {p:10, v:[F(L().lb.v6, L().lb.none, 'ok'), F(L().lb.verdict, R().vNoLeak, 'ok')]}
-      : {p:7, v:[F(L().lb.v6, R().v6Unknown, 'warn')]};
+    /* 查询成功但确实没有 v6 出口 → 可以给满分；查询本身失败 → 只能如实说判不了 */
+    if(probed) return {p:10, v:[F(L().lb.v6, L().lb.none, 'ok'), F(L().lb.verdict, R().vNoLeak, 'ok')]};
+    return NA([F(L().lb.v6, R().v6Unknown, 'warn')]);
   }
   const g=await netGet('https://ipwho.is/'+v6);
   let cc=g?(g.country_code||'').toUpperCase():'';
@@ -1555,7 +1577,13 @@ const CHECKS=[
   const raw=await ensureRtc();
   const host=raw.filter(x=>x.endsWith('|host')).map(x=>x.split('|')[0]);
   const ips=raw.map(x=>x.split('|')[0]);
-  if(!ips.length) return {p:9, v:[F(L().lb.addr, R().rtcLimited, 'warn')]};
+  if(!ips.length){
+    /* 有网但 WebRTC 探不到候选，通常是浏览器/系统把 WebRTC 关了，
+       这种情况没有泄露通道，属于安全；完全没网才是判不了 */
+    if(state.ip) return {p:9, v:[F(L().lb.addr, R().rtcNoCand, 'ok'),
+                              F(L().lb.verdict, R().vNoLeak, 'ok')]};
+    return NA([F(L().lb.addr, R().vCannotJudge, 'warn')]);
+  }
   const mdns=host.filter(h=>/\.local$/i.test(h)).length;
   const localOnly=host.filter(h=>!/\.local$/i.test(h)&&isPrivate(h)).length;
   const pub=ips.filter(i=>!isPrivate(i)&&i!==state.ip&&!/\.local$/i.test(i));
@@ -1577,7 +1605,7 @@ const CHECKS=[
   await ensureIntel();
   const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
   const cnTz=CN_TZ.includes(tz);
-  if(!state.cc) return {p:8, v:[F(L().lb.verdict, R().ipUnlocated, 'warn')]};
+  if(!state.cc) return NA([F(L().lb.verdict, R().ipUnlocated, 'warn')]);
   const region=regionOf(state.cc);
   const unsup=region==='bad';
   const f=[
@@ -1604,8 +1632,17 @@ const CHECKS=[
     }catch(e){ return false; }
   };
   const rs=await Promise.all(hosts.map(probe));
-  const f=hosts.map((h,i)=>F(L().lb.domain+' '+(i+1), h+(rs[i]?' · '+R().sReach:' · '+R().sUnreach), rs[i]?'ok':'bad'));
   const badN=rs.filter(x=>!x).length;
+  /* 三个全不通时，要先排除"整台设备没网"这种可能，
+     否则会把断网误报成 Claude 被封 */
+  if(badN===hosts.length){
+    await ensureIntel();
+    if(!state.ip){
+      return NA(hosts.map((h,i)=>F(L().lb.domain+' '+(i+1), h, 'warn'))
+                 .concat([F(L().lb.verdict, R().vNoNetwork, 'warn')]));
+    }
+  }
+  const f=hosts.map((h,i)=>F(L().lb.domain+' '+(i+1), h+(rs[i]?' · '+R().sReach:' · '+R().sUnreach), rs[i]?'ok':'bad'));
   f.push(F(L().lb.verdict, badN===0?R().vAllOk:R().vPartial, badN===0?'ok':'bad'));
   return {p:badN===0?10:badN>=2?2:6, v:f};
 }}
@@ -1626,6 +1663,12 @@ const results=[];
      bad   明确异常
      plain 只是读数，没有好坏之分 */
 function F(k,v,lv){ return {k:String(k), v:String(v==null||v===''?'-':v), lv:lv||'plain'}; }
+/* 数据读不到时的统一出口：给中间分并明确标注。
+   不能用高分掩盖"没测到"——那和"测过没问题"是两件事。 */
+function NA(fields){
+  return {p:5, v:(fields&&fields.length)?fields:[F(L().lb.verdict, R().vCannotJudge, 'warn')]};
+}
+
 /* 把结构化结果压成一行纯文本，用于日志和复制 */
 function flat(v){
   if(Array.isArray(v)) return v.map(f=>f.k+'：'+f.v).join('　');
