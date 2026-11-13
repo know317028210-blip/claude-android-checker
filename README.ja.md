@@ -109,7 +109,9 @@ IP が非対応地域                    → 20 点減、しかも即時否決
 
 **方法 1：APK**
 
-[Releases](../../releases) から `ClaudeDoctor.apk` を入手し、提供元不明アプリのインストールを許可します。
+**[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（65 KB）を直接ダウンロードし、提供元不明アプリのインストールを許可してください。
+
+バージョン履歴は [Releases](../../releases) にあります。
 
 **方法 2：Web 版（ネイティブ項目以外は同じ）**
 

@@ -109,7 +109,9 @@ That is why items are not all worth 10. An early build scored every item out of 
 
 **Option 1: APK**
 
-Grab `ClaudeDoctor.apk` from [Releases](../../releases) and allow installs from unknown sources.
+Download **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)** (65 KB) and allow installs from unknown sources.
+
+Version history is on [Releases](../../releases).
 
 **Option 2: Web version (same UI, minus native checks)**
 

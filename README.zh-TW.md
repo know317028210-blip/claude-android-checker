@@ -109,7 +109,9 @@ IP 落在不支援地區             → 丟 20 分，且直接否決
 
 **方式一：直接裝 APK**
 
-到 [Releases](../../releases) 下載 `ClaudeDoctor.apk`，允許安裝未知來源即可。
+直接下載 **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（65 KB），允許安裝未知來源即可。
+
+也可以到 [Releases](../../releases) 查看版本歷史。
 
 **方式二：網頁版（功能相同，少了原生那幾項）**
 
