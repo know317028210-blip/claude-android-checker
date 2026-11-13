@@ -318,15 +318,35 @@ const CC_NAME={
  IL:'以色列',AE:'阿联酋',SA:'沙特',EG:'埃及',ZA:'南非',BR:'巴西',AR:'阿根廷',CL:'智利',
  MX:'墨西哥',CO:'哥伦比亚'
 };
-const MCC_CC={ '460':'CN','461':'CN','454':'HK','455':'MO','466':'TW','310':'US','311':'US','312':'US',
-'313':'US','314':'US','315':'US','316':'US','330':'PR','234':'GB','235':'GB','262':'DE','208':'FR',
-'214':'ES','222':'IT','240':'SE','242':'NO','244':'FI','238':'DK','204':'NL','206':'BE','228':'CH',
-'232':'AT','230':'CZ','260':'PL','272':'IE','268':'PT','202':'GR','216':'HU','226':'RO','284':'BG',
-'440':'JP','441':'JP','450':'KR','467':'KP','525':'SG','502':'MY','510':'ID','520':'TH','452':'VN',
-'515':'PH','404':'IN','405':'IN','406':'IN','410':'PK','413':'LK','470':'BD','302':'CA','505':'AU',
-'530':'NZ','724':'BR','722':'AR','730':'CL','732':'CO','714':'PA','712':'CR','250':'RU','255':'UA',
-'257':'BY','259':'MD','286':'TR','425':'IL','420':'SA','424':'AE','431':'AE','602':'EG','603':'DZ',
-'604':'MA','621':'NG','639':'KE','655':'ZA','286':'TR','901':'XX' };
+/* MCC → 国家/地区。SIM 卡出厂写入的三位国家码，改不了，
+   是判断"这张卡属于哪国"最硬的证据。数据覆盖 229 个 MCC / 220 个国家地区。 */
+const MCC_GROUPS={
+  AD:'213',AE:'424,430,431',AF:'412',AG:'344',AI:'365',AL:'276',AM:'283',AN:'362',AO:'631',
+  AR:'722',AS:'544',AT:'232',AU:'505',AW:'363',AZ:'400',BA:'218',BB:'342',BD:'470',BE:'206',
+  BF:'613',BG:'284',BH:'426',BI:'642',BJ:'616',BM:'350',BN:'528',BO:'736',BR:'724',BS:'364',
+  BT:'402',BW:'652',BY:'257',BZ:'702',CA:'302',CD:'630',CF:'623',CG:'629',CH:'228',CI:'612',
+  CK:'548',CL:'730',CM:'624',CN:'460',CO:'732',CR:'712',CU:'368',CV:'625',CY:'280',CZ:'230',
+  DE:'262',DJ:'638',DK:'238',DM:'366',DO:'370',DZ:'603',EC:'740',EE:'248',EG:'602',ER:'657',
+  ES:'214',ET:'636',FI:'244',FJ:'542',FK:'750',FM:'550',FO:'288',FR:'208',GA:'628',
+  GB:'234,235',GD:'352',GE:'282,289',GF:'340',GH:'620',GI:'266',GL:'290',GM:'607',GN:'611',
+  GQ:'627',GR:'202',GT:'704',GW:'632',GY:'738',HK:'454',HN:'708',HR:'219',HT:'372',HU:'216',
+  ID:'510',IE:'272',IL:'425',IN:'404,405',IQ:'418',IR:'432',IS:'274',IT:'222',JM:'338',
+  JO:'416',JP:'440,441',KE:'639',KG:'437',KH:'456',KI:'545',KM:'654',KN:'356',KP:'467',
+  KR:'450',KW:'419',KY:'346',KZ:'401',LA:'457',LB:'415',LC:'358',LI:'295',LK:'413',LR:'618',
+  LS:'651',LT:'246',LU:'270',LV:'247',LY:'606',MA:'604',MC:'212',MD:'259',ME:'297',MG:'646',
+  MH:'551',MK:'294',ML:'610',MM:'414',MN:'428',MO:'455',MR:'609',MS:'354',MT:'278',MU:'617',
+  MV:'472',MW:'650',MX:'334',MY:'502',MZ:'643',NA:'649',NC:'546',NE:'614',NG:'621',NI:'710',
+  NL:'204',NO:'242',NP:'429',NU:'555',NZ:'530',OM:'422',PA:'714',PE:'716',PF:'547',PG:'537',
+  PH:'515',PK:'410',PL:'260',PM:'308',PR:'330',PT:'268',PW:'552',PY:'744',QA:'427',RE:'647',
+  RO:'226',RS:'220',RU:'250',RW:'635',SA:'420',SB:'540',SC:'633',SD:'634',SE:'240',SG:'525',
+  SH:'658',SI:'293',SK:'231',SL:'619',SM:'292',SN:'608',SO:'637',SR:'746',SS:'659',ST:'626',
+  SV:'706',SY:'417',SZ:'653',TC:'376',TD:'622',TG:'615',TH:'520',TJ:'436',TL:'514',TM:'438',
+  TN:'605',TO:'539',TR:'286',TT:'374',TV:'553',TW:'466',TZ:'640',UA:'255',UG:'641',
+  US:'310,311,312,316',UY:'748',UZ:'434',VA:'225',VC:'360',VE:'734',VG:'348',VN:'452',
+  VU:'541',WF:'543',WS:'549',XK:'221',YE:'421',ZA:'655',ZM:'645',ZW:'648'
+};
+const MCC_CC={};
+for(const iso in MCC_GROUPS) MCC_GROUPS[iso].split(',').forEach(m=>{ MCC_CC[m]=iso; });
 /* MCC 是 SIM 卡出厂写入的，属于硬数据；countryIso 是系统层字段，
    无服务或 ROM 异常时可能是脏值（实测见过 MCC=460 却报 us 的情况）。
    因此以 MCC 为准，ISO 只在 MCC 缺失时兜底，并单独记录两者是否矛盾。 */
@@ -353,7 +373,25 @@ console.log('[NATIVE] integrity='+JSON.stringify(INTEG));
 console.log('[NATIVE] fonts='+SYSFONTS.length);
 
 /* ===================== 官方地区名单 ===================== */
+/* 官方明确不开放的地区（IP 与注册层面） */
 const UNSUP=new Set(['CN','HK','MO','RU','BY','IR','KP','CU','SY']);
+
+/* 地区判定只有三种结果，不能有第四种"大概没问题"：
+     ok      确认在支持地区
+     bad     确认在不支持地区
+     unknown 读不到或认不出——这种情况必须如实说不知道，不能当成通过 */
+function regionOf(cc){
+  if(!cc||!/^[A-Z]{2}$/.test(cc)) return 'unknown';
+  if(!CC_NAME[cc]&&!isValidCC(cc)) return 'unknown';   // 不是合法国家码
+  return UNSUP.has(cc)?'bad':'ok';
+}
+/* 用浏览器内置地区表校验国家码是否真实存在（XK、XX 这类会原样返回） */
+function isValidCC(cc){
+  try{
+    const n=new Intl.DisplayNames(['en'],{type:'region'}).of(cc);
+    return !!n && n!==cc;
+  }catch(e){ return true; }   // 老内核没有这个 API 时不做否定判断
+}
 
 /* ===================== IP 情报 ===================== */
 
@@ -540,6 +578,8 @@ const I18N = {
     vAllOk:'全部可达', vPartial:'部分不可达',
     vBothBad:'时区与 IP 都不通过',
     sReach:'可达', sUnreach:'不可达', sInstalled:'已安装',
+    regionUnknown:(mcc)=>`未知地区（MCC ${mcc}）`,
+    vRegionUnknown:'无法判定（地区未识别）',
     yes:'有', no:'无',
     unk:'未知'
   }
@@ -703,6 +743,8 @@ const I18N = {
     vAllOk:'全部可達', vPartial:'部分不可達',
     vBothBad:'時區與 IP 都不通過',
     sReach:'可達', sUnreach:'不可達', sInstalled:'已安裝',
+    regionUnknown:(mcc)=>`未知地區（MCC ${mcc}）`,
+    vRegionUnknown:'無法判定（地區未識別）',
     yes:'有', no:'無',
     unk:'未知'
   }
@@ -866,6 +908,8 @@ const I18N = {
     vAllOk:'all reachable', vPartial:'partly unreachable',
     vBothBad:'both timezone and IP fail',
     sReach:'reachable', sUnreach:'unreachable', sInstalled:'installed',
+    regionUnknown:(mcc)=>`Unknown region (MCC ${mcc})`,
+    vRegionUnknown:'cannot determine (region unrecognised)',
     yes:'yes', no:'none',
     unk:'unknown'
   }
@@ -1029,6 +1073,8 @@ const I18N = {
     vAllOk:'すべて到達可能', vPartial:'一部到達不可',
     vBothBad:'タイムゾーンと IP の両方が不合格',
     sReach:'到達可', sUnreach:'到達不可', sInstalled:'導入済み',
+    regionUnknown:(mcc)=>`不明な地域（MCC ${mcc}）`,
+    vRegionUnknown:'判定できません（地域を識別できず）',
     yes:'あり', no:'なし',
     unk:'不明'
   }
@@ -1313,9 +1359,12 @@ const CHECKS=[
     }
     return {p:10, v:[F(L().lb.simCard(1), R().simNone, 'ok')]};
   }
-  /* 逐卡列出：有什么写什么，不套模板。
-     国家以 MCC 为准（ISO 可能是脏值），运营商名缺失就不写，号码读到才显示后四位。 */
+  /* 逐卡判定，每张卡只有三种结论：支持 / 不支持 / 未知。
+     未知不等于通过：读不到 MCC、MCC 不在表里、国家码不合法，都算未知，
+     按中间分处理并如实标出来，不猜。 */
   const cards=slots.map(x=>{
+    const mcc=String(x.mcc||'').trim();
+    const iso=String(x.country||'').toUpperCase();
     const cc=mccCountry(x)||'';
     const nm=String(x.displayName||'').trim();
     const raw=String(x.carrier||'').trim();
@@ -1323,26 +1372,40 @@ const CHECKS=[
     const car=!dead(nm)?nm:!dead(raw)?raw:'';
     const num=String(x.number||'').trim();
     const active=(x.service!==undefined)?!!x.service:!!car;
-    return {slot:(x.slot!=null?x.slot:0), cc, car, active,
+    return {slot:(x.slot!=null?x.slot:0), cc, mcc, iso, car, active,
+            region:regionOf(cc),
             tail:(num.length>=4?num.slice(-4):''), esim:!!x.esim};
   });
-  const bad=c=>!!c&&['CN','HK','MO'].includes(c);
-  const usable=cards.filter(c=>c.cc&&!bad(c.cc));
-  const mainBad=cards.length?bad(cards[0].cc):false;
+
+  const usable=cards.filter(c=>c.region==='ok').length;
+  const badN=cards.filter(c=>c.region==='bad').length;
+  const unknownN=cards.filter(c=>c.region==='unknown').length;
+  const mainRegion=cards[0].region;
 
   const build=()=>cards.map(c=>{
     const seg=[];
-    if(c.cc) seg.push(R().simCountry(c.cc));
+    if(c.region==='unknown'){
+      /* 认不出来时把读到的原始码一起给出，便于判断是没读到还是没收录 */
+      seg.push(R().regionUnknown(c.mcc||'-'));
+    }else{
+      seg.push(R().simCountry(c.cc));
+    }
     if(c.car) seg.push(c.car);
     if(c.esim) seg.push(R().simEsim);
     if(c.tail) seg.push(R().simTail(c.tail));
-    const val=seg.length?seg.join(' · '):L().lb.none;
-    /* 状态直接对应后果：不支持地区 = 异常，无服务 = 注意 */
-    const lv=!c.cc?'warn':bad(c.cc)?'bad':c.active?'ok':'warn';
-    return F(L().lb.simCard(c.slot+1), val+(c.active?'':' · '+R().simInactive), lv);
-  }).concat(usable.length&&mainBad?[F(L().lb.verdict, R().simGoodCard, 'plain')]:[]);
+    if(!c.active) seg.push(R().simInactive);
+    const lv=c.region==='bad'?'bad':c.region==='unknown'?'warn':(c.active?'ok':'warn');
+    return F(L().lb.simCard(c.slot+1), seg.join(' · '), lv);
+  }).concat(usable&&badN?[F(L().lb.verdict, R().simGoodCard, 'plain')]:[])
+   .concat(!usable&&!badN&&unknownN?[F(L().lb.verdict, R().vRegionUnknown, 'warn')]:[]);
 
-  return {p:usable.length?(mainBad?6:10):(mainBad?3:10), v:build(), recalc:build};
+  /* 评分：有可用卡最高 10；全不支持 3；认不出来给 6，既不判死也不放过 */
+  let p;
+  if(usable) p = badN?6:10;
+  else if(badN) p = 3;
+  else p = 6;
+
+  return {p, v:build(), recalc:build};
 }},
 
 {cat:'dev',key:'设备型号',w:1,fn:()=>{
@@ -1417,8 +1480,18 @@ const CHECKS=[
 /* ---------- 网络出口 ---------- */
 {cat:'net',key:'IP 归属地',w:20,fn:async()=>{
   await ensureIntel();
-  if(!state.cc) return {p:5, v:[F(L().lb.ip, R().noIP, 'warn')]};
-  const bad=UNSUP.has(state.cc);
+  if(!state.cc) return {p:5, v:[F(L().lb.ip, R().noIP, 'warn'),
+                                F(L().lb.verdict, R().vRegionUnknown, 'warn')]};
+  /* 认不出国家时给中间分并说明原因，不能默认放行 */
+  const region=regionOf(state.cc);
+  if(region==='unknown'){
+    return {p:5, v:[
+      F(L().lb.ip, state.ip||'-', 'plain'),
+      F(L().lb.loc, state.cc, 'warn'),
+      F(L().lb.verdict, R().vRegionUnknown, 'warn')
+    ]};
+  }
+  const bad=region==='bad';
   const f=[
     F(L().lb.ip, state.ip||'-', 'plain'),
     F(L().lb.loc, ccName(state.cc)+(state.city?(' · '+state.city):''), bad?'bad':'ok'),
@@ -1505,13 +1578,15 @@ const CHECKS=[
   const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
   const cnTz=CN_TZ.includes(tz);
   if(!state.cc) return {p:8, v:[F(L().lb.verdict, R().ipUnlocated, 'warn')]};
-  const unsup=UNSUP.has(state.cc);
+  const region=regionOf(state.cc);
+  const unsup=region==='bad';
   const f=[
     F(L().lb.tz, tz||R().tzUnknown, cnTz?'bad':'ok'),
-    F(L().lb.loc, ccName(state.cc), unsup?'bad':'ok')
+    F(L().lb.loc, region==='unknown'?state.cc:ccName(state.cc), region==='unknown'?'warn':unsup?'bad':'ok')
   ];
   let p, verdict, lv;
-  if(cnTz&&unsup){ p=2; verdict=R().vBothBad; lv='bad'; }
+  if(region==='unknown'){ p=5; verdict=R().vRegionUnknown; lv='warn'; }
+  else if(cnTz&&unsup){ p=2; verdict=R().vBothBad; lv='bad'; }
   else if(cnTz){ p=4; verdict=R().vMismatch; lv='warn'; }
   else if(unsup){ p=3; verdict=R().vUnsupRegion; lv='bad'; }
   else { p=10; verdict=R().vMatch; lv='ok'; }

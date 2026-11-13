@@ -27,6 +27,8 @@ You get a score out of 100 and one sentence of conclusion. The score itself is n
 
 Each result is listed as labelled fields, not one blob of text. Values are colour-coded normal / note / problem, so on a dual-SIM phone card 1 turns red and card 2 green — you can see which card is the issue at a glance.
 
+Anything it cannot read is never counted as a pass. An unrecognised SIM or an unparseable region is labelled “cannot determine” and given a middle score — no guessing, no free pass.
+
 <br>
 
 <div align="center">
