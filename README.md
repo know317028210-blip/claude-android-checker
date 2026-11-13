@@ -19,7 +19,7 @@ A native Android app that reads 21 device signals and weights them. The proxy is
 </p>
 
 <div align="center">
-<img src="docs/demo.gif" width="280" alt="demo">
+<img src="docs/demo-en.gif" width="280" alt="demo">
 </div>
 
 </div>

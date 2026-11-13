@@ -19,7 +19,7 @@
 </p>
 
 <div align="center">
-<img src="docs/demo.gif" width="280" alt="演示">
+<img src="docs/demo-zh-TW.gif" width="280" alt="演示">
 </div>
 
 </div>

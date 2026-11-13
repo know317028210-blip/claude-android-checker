@@ -19,7 +19,7 @@
 </p>
 
 <div align="center">
-<img src="docs/demo.gif" width="280" alt="デモ">
+<img src="docs/demo-ja.gif" width="280" alt="デモ">
 </div>
 
 </div>
