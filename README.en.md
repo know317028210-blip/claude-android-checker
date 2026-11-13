@@ -26,7 +26,7 @@
 
 A diagnostic app for your phone. It reads the signals your device already emits and tells you whether this environment looks like **an ordinary user overseas**, or like **a set of fingerprints that have been flagged before**.
 
-Unlike a web-based check, this is a native Android app, so it reaches things a page never can: which fonts are installed in the system, which country the SIM belongs to, whether it is an eSIM, whether app cloning is in use, whether the ROM is official, whether the VPN is system-wide.
+Unlike a check that runs in a browser, this is a native Android app, so it reaches things a page never can: which fonts are installed in the system, which country the SIM belongs to, whether it is an eSIM, whether app cloning is in use, whether the ROM is official, whether the VPN is system-wide.
 
 You get a score out of 100 and one sentence of conclusion. The score itself is not the point. What matters is **which item is dragging you down, why, and how to fix it**.
 
@@ -100,27 +100,11 @@ That is why items are not all worth 10. An early build scored every item out of 
 
 ## Install
 
-**Option 1: APK**
+**Install the APK**
 
 Download **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)** (69 KB) and allow installs from unknown sources.
 
 Version history is on [Releases](../../releases).
-
-**Option 2: Web version (same UI, minus native checks)**
-
-Open `app/index.html` in a browser. It cannot read the font table, SIM country, root state or cloned apps; those items are marked "unreadable in a browser" instead of silently passing.
-
-**Option 3: Desktop**
-
-```bash
-# macOS / Linux
-bash desktop/claude-env-check.sh
-
-# Windows (requires Go 1.21+)
-cd desktop/doctor-lite && go build -o ClaudeDoctorLite.exe . && ./ClaudeDoctorLite.exe
-```
-
-The desktop script checks your command-line environment for Claude Code — a different thing from what the phone app checks. Use whichever fits.
 
 ---
 

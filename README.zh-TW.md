@@ -26,7 +26,7 @@
 
 一個裝在手機上的體檢工具。它讀一遍裝置本身的訊號，告訴你**這個環境更像一個普通的海外使用者，還是像一串被標記過的特徵**。
 
-和網頁版檢測不同，這是原生 Android 應用。它能讀到網頁永遠拿不到的東西：系統字型表裡裝了什麼、SIM 卡歸屬哪個國家、是不是 eSIM、有沒有開分身、系統是不是官方 ROM、VPN 是不是全域。
+和瀏覽器裡跑的檢測不同，這是原生 Android 應用。它能讀到網頁永遠拿不到的東西：系統字型表裡裝了什麼、SIM 卡歸屬哪個國家、是不是 eSIM、有沒有開分身、系統是不是官方 ROM、VPN 是不是全域。
 
 查完給一個 100 分的評分和一句結論。分數本身不重要，重要的是**哪一項在拖後腿、為什麼、怎麼改**。
 
@@ -100,27 +100,11 @@ IP 落在不支援地區             → 丟 20 分，且直接否決
 
 ## 安裝
 
-**方式一：直接裝 APK**
+**直接裝 APK**
 
 直接下載 **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（69 KB），允許安裝未知來源即可。
 
 也可以到 [Releases](../../releases) 查看版本歷史。
-
-**方式二：網頁版（功能相同，少了原生那幾項）**
-
-瀏覽器打開 `app/index.html`。網頁版讀不到字型表、SIM 歸屬、Root、分身，這幾項會標註為「網頁環境無法讀取」，而不是假裝通過。
-
-**方式三：電腦端**
-
-```bash
-# macOS / Linux
-bash desktop/claude-env-check.sh
-
-# Windows（需要 Go 1.21+）
-cd desktop/doctor-lite && go build -o ClaudeDoctorLite.exe . && ./ClaudeDoctorLite.exe
-```
-
-桌面版查的是命令列環境（Claude Code 相關），和手機 App 查的不是一回事，按需要選用。
 
 ---
 

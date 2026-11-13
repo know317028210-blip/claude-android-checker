@@ -26,7 +26,7 @@
 
 一个装在手机上的体检工具。它读一遍设备本身的信号，告诉你**这个环境更像一个普通海外用户，还是像一串被标记过的特征**。
 
-和网页版检测不同，这是个原生安卓应用。它能读到网页永远拿不到的东西：系统字体表里装了什么、SIM 卡归属哪个国家、是不是 eSIM、有没有开分身、系统是不是官方 ROM、VPN 是不是全局。
+和浏览器里跑的检测不同，这是个原生安卓应用。它能读到网页永远拿不到的东西：系统字体表里装了什么、SIM 卡归属哪个国家、是不是 eSIM、有没有开分身、系统是不是官方 ROM、VPN 是不是全局。
 
 查完给一个 100 分的评分和一句结论。分数本身不重要，重要的是**哪一项在拖后腿、为什么、怎么改**。
 
@@ -100,27 +100,11 @@ IP 落在不支持地区           → 丢 20 分，且直接否决
 
 ## 安装
 
-**方式一：直接装 APK**
+**直接装 APK**
 
 直接下载 **[ClaudeDoctor.apk](https://github.com/know317028210-blip/claude-android-checker/releases/latest/download/ClaudeDoctor.apk)**（69 KB），允许安装未知来源即可。
 
 也可以到 [Releases](../../releases) 查看版本历史。
-
-**方式二：网页版（功能相同，少了原生那几项）**
-
-浏览器打开 `app/index.html`。网页版读不到字体表、SIM 归属、Root、分身，这几项会标注为"网页环境无法读取"而不是假装通过。
-
-**方式三：电脑端**
-
-```bash
-# macOS / Linux
-bash desktop/claude-env-check.sh
-
-# Windows（需要 Go 1.21+）
-cd desktop/doctor-lite && go build -o ClaudeDoctorLite.exe . && ./ClaudeDoctorLite.exe
-```
-
-桌面版查的是命令行环境（Claude Code 相关），和手机 App 查的不是一回事，按需要选用。
 
 ---
 
